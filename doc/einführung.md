@@ -1,9 +1,12 @@
 ---
 layout: default
-title: Einführung
-nav_order: 3
+title: Info
+nav_order: 1
 has_children: true
 permalink: /docs/einführung
 ---
 
-# Einführung
+# Information
+Willkommen auf der Webseite der Urban Data Science Workshop .
+Hier werden wir die Kursskripte und Daten veröffentlichen.
+

@@ -1,8 +1,8 @@
 ---
 layout: default
 title: Workshop Material
-parent: einführung
-nav_order: 3
+parent: Information
+nav_order: 2
 ---
 
 # Daten

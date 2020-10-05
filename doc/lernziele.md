@@ -1,8 +1,8 @@
 ---
 layout: default
 title: Lernziele
-parent: einführung
-nav_order: 2
+parent: Information
+nav_order: 1
 ---
 
 # Lernziele

@@ -1,5 +1,5 @@
-title: "Just the Docs: Remote theme example"
+title: "Urban Data Science Workshop"
 title: "Remote theme example"
 remote_theme: pmarsceill/just-the-docs
-color_scheme: "dark"
+color_scheme: "light"
 search_enabled: false

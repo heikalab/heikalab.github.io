@@ -6,7 +6,7 @@ nav_order: 4
 ---
 
 # Orga-Team
-![soylu]({{ BASE_PATH }}/soylu.jpg)
+![soylu]({{ base_path}}/soylu.jpg)
 * Dr. Tamer Soylu (KIT-IfV)
 <img src="{{site.url}}/images/novack.png" style="display: block; margin: auto;" />
 * Dr. Tessio Novack (Universität Heidelberg - GIScience Research Group)

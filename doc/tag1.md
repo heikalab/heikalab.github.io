@@ -3,7 +3,6 @@ layout: default
 title: Tag 1 - Einführung in GIScience
 nav_order: 3
 has_children: true
-permalink: /docs/tag1.md
 ---
 
 # Tag 1 - Einführung in GIScience

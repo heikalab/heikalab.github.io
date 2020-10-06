@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Tag 1 - Einführung in GIScience
-nav_order: 1
+nav_order: 2
 has_children: true
 permalink: /docs/tag1.md
 ---

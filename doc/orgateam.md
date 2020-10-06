@@ -7,6 +7,7 @@ nav_order: 4
 
 # Orga-Team
 * Dr. Tamer Soylu (KIT-IfV)
+<img src="{{site.url}}/images/novack.jpg" style="display: block; margin: auto;" />
 * Dr. Sven Lautenbach (Universität Heidelberg - GIScience Research Group)
 * Dr. Tessio Novack (HeiGIT)
 

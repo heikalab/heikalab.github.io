@@ -7,7 +7,7 @@ nav_order: 4
 
 # Orga-Team
 <p>
-<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/soylu.jpg" alt="Tamer Soylu" style="float:left; width:120px;height:120px;">
+<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/soylu.jpg" alt="Tamer Soylu" style="float:left; width="280" height="300";">
 Dr. Tamer Soylu (KIT-IfV)
 
 <p>

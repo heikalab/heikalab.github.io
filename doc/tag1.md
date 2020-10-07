@@ -18,8 +18,13 @@ Prof. Dr. Peter Vortisch (KIT-IfV)
 Prof. Dr. Alexander Zipf (Universität Heidelberg - GIScience Research Group)
 </p>
 
+<p>
+<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/novack.png" alt="Tessio Novack" style="float:left; width:120px;height:120px;">
+Dr. Tessio Novack (Universität Heidelberg - GIScience Research Group)
+</p> 
+
 ## Programm
-Ziel des heutigen Themenblocks ist es: Einführung in GIS und in Urban Data Science
+Ziel des heutigen Themenblocks ist es: Einführung in GIS und in Urban Data Science.
 *	09:00 - 10:00 Impulsvorträge von Prof. Dr. Alexander Zipf und Prof. Dr. Peter Vortisch
 *	10:00 - 11:00 Einführung in GIS und Urban Data Science
 *	11:00 - 11:30 Vorbereitung zur Übung in "Einführung in GIS"

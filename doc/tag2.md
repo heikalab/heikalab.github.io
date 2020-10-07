@@ -9,7 +9,7 @@ nav_order: 4
 ## Vortragende
 
 <p>
-<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/keller.jpg" alt="Sina Keller" style="float:left; width:280px;height:300px;">
+<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/keller.jpg" alt="Sina Keller" style="align:left; width:280px;height:300px;">
 Dr. Sina Keller (KIT-IPF)
 </p>
 

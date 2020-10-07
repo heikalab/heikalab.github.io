@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Termine
-parent: Information
+parent: Allgemeines
 nav_order: 3
 ---
 

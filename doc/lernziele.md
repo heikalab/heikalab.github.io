@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Lernziele
-parent: Information
+parent: Allgemeines
 nav_order: 1
 ---
 

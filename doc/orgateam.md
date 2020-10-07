@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Orga-Team und Kursleiter
-parent: Information
+parent: Allgemeines
 nav_order: 4
 ---
 

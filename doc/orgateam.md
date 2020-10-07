@@ -6,8 +6,10 @@ nav_order: 4
 ---
 
 # Orga-Team
-<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/soylu.jpg" style="display: inline; margin: auto;" />
-* Dr. Tamer Soylu (KIT-IfV)
+<p>
+<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/soylu.jpg" alt="Tamer Soylu" style="float:left; width:120px;height:120px;">
+Dr. Tamer Soylu
+ </p>
 <img src="{{site.url}}/images/novack.png" style="display: block; margin: auto;" />
 * Dr. Tessio Novack (Universität Heidelberg - GIScience Research Group)
 <img src="{{site.url}}/images/lautenbach.jpg" style="display: block; margin: auto;" />

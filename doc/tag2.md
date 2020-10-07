@@ -14,7 +14,7 @@ Dr. Sina Keller (KIT-IPF)
 </p>
 
 <p>
-<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/lautenbach.jpg" alt="Sven Lautenbach" style="float:left; width:280px;height:300px;">
+<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/lautenbach.jpg" alt="Sven Lautenbach" style="align:left; width:280px;height:300px;">
 Dr. Sven Lautenbach (HeiGIT)
 </p>
 

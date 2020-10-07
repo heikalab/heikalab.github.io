@@ -11,11 +11,11 @@ nav_order: 4
 Dr. Tamer Soylu (KIT-IfV)
 
 <p>
-<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/novack.png" alt="Tessio Novack" style="float:left; width:120px;height:120px;">
+<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/novack.png" alt="Tessio Novack" style="float:left; width="280" height="300";">
 Dr. Tessio Novack (Universität Heidelberg - GIScience Research Group)
 
 <p>
-<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/lautenbach.jpg" alt="Sven Lautenbach" style="float:left; width:120px;height:120px;">
+<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/lautenbach.jpg" alt="Sven Lautenbach" style="float:left; width="280" height="300";">
 Dr. Sven Lautenbach (HeiGIT)
 </p> 
 

@@ -19,3 +19,11 @@ Prof. Dr. Alexander Zipf (Universität Heidelberg - GIScience Research Group)
 </p>
 
 ## Programm
+Ziel des heutigen Themenblocks ist es: Einführung in GIS und in Urban Data Science
+*	09:00 - 10:00 Impulsvorträge von Prof. Dr. Alexander Zipf und Prof. Dr. Peter Vortisch
+*	10:00 - 11:00 Einführung in GIS und Urban Data Science
+*	11:00 - 11:30 Vorbereitung zur Übung in "Einführung in GIS"
+*	11:30 - 12:30 Übung zum Thema "Einführung in GIS"
+*	14:00 - 14:45 Einführung zur Übung "Spatial Regression Models"
+*	14:45 - 17:00 Übung zum Thema "Spatial Regression Models"
+*	17:00 - 17:30 Abschlussdiskussion 

@@ -6,9 +6,7 @@ nav_order: 3
 ---
 
 # Termine
-Die Veranstaltungen finden zwischen 19.10 - 23.10 täglich von 09:00 Uhr bis 17:30 Uhr statt.
-
-19 - 23.10.2020 
+Die Veranstaltung findet vom 19. – 23. Oktober 2020, jeweils von 9-17 Uhr statt. Die Vorträge werden Online gehalten, weitere Informationen (Software, Installationsanleitungen etc.) werden nach der Anmeldung zur Verfügung gestellt.
 
 __Täglich__ 
 * 09:00 - 12:30 Uhr Vormittagsblock

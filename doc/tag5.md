@@ -9,12 +9,12 @@ nav_order: 7
 ## Vortragende
 
 <p>
-<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/bruns.jpg" alt="Julian Bruns" style="float:left; width:280px;height:300px;">
+<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/bruns.jpg" alt="Julian Bruns" style="align:left; width:280px;height:300px;">
 Dr. Julian Bruns (Disy Informationssysteme GmbH)
 </p>
 
 <p>
-<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/lautenbach.jpg" alt="Sven Lautenbach" style="float:left; width:280px;height:300px;">
+<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/lautenbach.jpg" alt="Sven Lautenbach" style="align:left; width:280px;height:300px;">
 Dr. Sven Lautenbach (HeiGIT)
 </p>
 

@@ -12,9 +12,9 @@ Die Vorlesung wird von verschiedenen Dozenten aus Theorie und Praxis gehalten.
 
 Es wird insbesondere auf folgende Themen eingegangen:
 
--Einführung in GIScience
--Grundaufgaben der räumlichen Statistik
--Urbane Mobilität und Umgang mit Bewegungsdaten
--Open und Big Data
--Routing (Techniken, Anwendungen)
--Informationsvisualisierung
+.Einführung in GIScience
+.Grundaufgaben der räumlichen Statistik
+.Urbane Mobilität und Umgang mit Bewegungsdaten
+.Open und Big Data
+.Routing (Techniken, Anwendungen)
+.Informationsvisualisierung

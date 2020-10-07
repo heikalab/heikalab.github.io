@@ -10,15 +10,12 @@ nav_order: 4
 <img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/soylu.jpg" alt="Tamer Soylu" style="float:left; width:120px;height:120px;"/>
 Dr. Tamer Soylu (KIT-IfV)
 </p>
-<br>
 <p>
 <img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/novack.png" alt="Tessio Novack" style="float:left; width:120px;height:120px;"/>
 Dr. Tessio Novack (Universität Heidelberg - GIScience Research Group)
 </p> 
-<br>
 <p>
 <img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/lautenbach.jpg" alt="Sven Lautenbach" style="float:left; width:120px;height:120px;"/>
 Dr. Sven Lautenbach (HeiGIT)
 </p> 
-<br>
 <p>Email: name.nachname at kit punkt edu / uni-heidelberg punkt edu </p>

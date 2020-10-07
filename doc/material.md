@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Workshop Material
-parent: Information
+parent: Allgemeines
 nav_order: 2
 ---
 

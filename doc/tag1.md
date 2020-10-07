@@ -9,17 +9,17 @@ has_children: true
 ## Vortragende
 
 <p>
-<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/vortisch.jpg" alt="Peter Vortisch" style="float:left; width:120px;height:120px;">
+<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/vortisch.jpg" alt="Peter Vortisch" style="align:left; width:120px;height:120px;">
 Prof. Dr. Peter Vortisch (KIT-IfV)
 </p>
 
 <p>
-<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/zipf.jpg" alt="Alexander Zipf" style="float:left; width:120px;height:120px;">
+<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/zipf.jpg" alt="Alexander Zipf" style="align:left; width:120px;height:120px;">
 Prof. Dr. Alexander Zipf (Universität Heidelberg - GIScience Research Group)
 </p>
 
 <p>
-<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/novack.png" alt="Tessio Novack" style="float:left; width:120px;height:120px;">
+<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/novack.png" alt="Tessio Novack" style="align:left; width:120px;height:120px;">
 Dr. Tessio Novack (Universität Heidelberg - GIScience Research Group)
 </p> 
 

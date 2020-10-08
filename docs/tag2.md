@@ -9,12 +9,12 @@ nav_order: 4
 ## Vortragende
 
 <p>
-<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/keller.jpg" alt="Sina Keller" style="align:left; width:280px;height:300px;">
+<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/keller.jpg" alt="Sina Keller" style="align:left; width:120px;height:120px;">
 Dr. Sina Keller (KIT-IPF)
 </p>
 
 <p>
-<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/lautenbach.jpg" alt="Sven Lautenbach" style="align:left; width:280px;height:300px;">
+<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/lautenbach.jpg" alt="Sven Lautenbach" style="align:left; width:120px;height:120px;">
 Dr. Sven Lautenbach (HeiGIT)
 </p>
 

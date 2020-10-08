@@ -8,15 +8,15 @@ nav_order: 5
 # Tag 3 - Bewegungsdaten - urbane Mobilität 
 ## Vortragende
 <p>
-<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/graser.jpg" alt="Anita Graser" style="align:left;  width:280px;height:300px;">
+<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/graser.jpg" alt="Anita Graser" style="align:left;  width:width:120px;height:120px;">
 Anita Graser (AIT)
 </p>
 <p>
-<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/hitscherich.jpg" alt="Karin Hitscherich" style="align:left; width:280px;height:300px;">
+<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/hitscherich.jpg" alt="Karin Hitscherich" style="align:left; width:width:120px;height:120px;">
 Karin Hitscherich (PTV Group)
 </p>
 <p>
-<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/soylu.jpg" alt="Tamer Soylu" style="align:left; width:280px;height:300px;">
+<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/soylu.jpg" alt="Tamer Soylu" style="align:left; width:width:120px;height:120px;">
 Dr. Tamer Soylu (KIT-IfV)
 </p> 
 

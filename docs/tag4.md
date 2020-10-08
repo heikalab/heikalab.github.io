@@ -8,12 +8,12 @@ nav_order: 6
 # Tag 4 - Visualisierung
 ## Vortragende
 <p>
-<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/nagel.jpg" alt="Till Nagel" style="align:left;  width:280px;height:300px;">
+<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/nagel.jpg" alt="Till Nagel" style="align:left;  width:width:120px;height:120px;">
 Prof. Dr. Till Nagel (HS Mannheim)
 </p>
 
 <p>
-<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/soylu.jpg" alt="Tamer Soylu" style="align:left; width:280px;height:300px;">
+<img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/soylu.jpg" alt="Tamer Soylu" style="align:left; width:width:120px;height:120px;">
 Dr. Tamer Soylu (KIT-IfV)
 </p> 
 

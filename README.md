@@ -6,27 +6,27 @@ Dieser beschäftigt sich insbesondere mit räumlichen Fragestellungen des Verkeh
 
 Es wird insbesondere auf folgende Themen eingegangen:
 
-    Einführung in GIScience
-    Grundaufgaben der räumlichen Statistik
-    Urbane Mobilität und Umgang mit Bewegungsdaten
-    Open und Big Data
-    Routing (Techniken, Anwendungen)
-    Informationsvisualisierung
+- Einführung in GIScience
+- Grundaufgaben der räumlichen Statistik
+- Urbane Mobilität und Umgang mit Bewegungsdaten
+- Open und Big Data
+- Routing (Techniken, Anwendungen)
+- Informationsvisualisierung
 
 ## Zielgruppe
 
-    Master-Studierende (KIT, Heidelberg) vorzugsweise mit geringen oder keinen Programmierkenntnissen, mit Vertiefung in den Bereichen:
+Master-Studierende (KIT, Heidelberg) vorzugsweise mit geringen oder keinen Programmierkenntnissen, mit Vertiefung in den Bereichen:
 
-      -  Mobilität und Infrastruktur
-      -  Wirtschaftsingenieurwesen
-      -  Verkehr
-      -  Geoinformatik
-      -  Wirtschafts-, Stadt-, Humangeographie
-      -  Umwelt und Entwicklung
+-  Mobilität und Infrastruktur
+-  Wirtschaftsingenieurwesen
+-  Verkehr
+-  Geoinformatik
+-  Wirtschafts-, Stadt-, Humangeographie
+-  Umwelt und Entwicklung
 
 ## Ablauf
 
-    Die Veranstaltung findet vom 19. – 23. Oktober 2020, jeweils von 9-17 Uhr statt. Die Vorträge werden Online gehalten, weitere Informationen (Software, Installationsanleitungen etc.) befinden sich hier.
+Die Veranstaltung findet vom 19. – 23. Oktober 2020, jeweils von 9-17 Uhr statt. Die Vorträge werden Online gehalten, weitere Informationen (Software, Installationsanleitungen etc.) befinden sich auf diesen Seiten.
 
 ## Förderung
 

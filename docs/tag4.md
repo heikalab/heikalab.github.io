@@ -20,8 +20,8 @@ Dr. Tamer Soylu (KIT-IfV)
 ## Programm
 Ziel des heutigen Themenblocks ist es: Einführung in die Visualisierung der (räumlichen) Daten.
 
-* 09:00 - 10:00 Impulsvortrag von Prof. Dr. Till Nagel
-* 10:00 - 11:30 Visualisierung der (räumlichen) Daten mit ggplots und ggmaps 
-* 11:30 - 13:00 Thematische Kartierung mit und ohne GIS
-* 14:00 - 15:30 Interaktive Karten und Webanwendungen (leaflet, shiny)
-* 15:30 - 17:30 Dreidimensionale Darstellungen
+* 10:00 - 11:00 Impulsvortrag von Prof. Dr. Till Nagel
+* 11:00 - 12:00 Visualisierung der (räumlichen) Daten mit ggplots und ggmaps 
+* 13:00 - 14:30 Thematische Kartierung mit und ohne GIS
+* 14:30 - 16:00 Interaktive Karten und Webanwendungen (leaflet, shiny)
+* 16:00 - 17:30 Dreidimensionale Darstellungen

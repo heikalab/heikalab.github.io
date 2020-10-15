@@ -22,9 +22,10 @@ Dr. Tamer Soylu (KIT-IfV)
 
 ## Programm
 
-* 09:00 - 10:00 Impulsvorträge von Anita Graser und Karin Hitscherich
+* 09:00 - 10:00 Impulsvortrag von Anita Graser 
 * 10:00 - 11:00 Einführung in movingpandas
-* 11:00 - 12:30 Übungen mit movingpandas zum Thema "Bewegungsdaten" mit E-Scooter Daten
-* 12:30 - 13:15 Einführung in Analyse von "spatial flows" mit R
-* 14:00 - 15:30 "Mapping Urban Mobility" Analyse des Verkehrsflusses 
-* 15:30 - 17:30 Übungen zum Thema "Urban Mobility" mit TomTom Daten
+* 11:00 - 12:00 Übungen mit movingpandas zum Thema "Bewegungsdaten" mit E-Scooter Daten
+* 12:00 - 13:00 Impulsvortrag von Karin Hitscherich
+* 14:00 - 15:00 Einführung in Analyse von "spatial flows" mit R
+* 15:00 - 16:00 "Mapping Urban Mobility" Analyse des Verkehrsflusses 
+* 16:00 - 17:30 Übungen zum Thema "Urban Mobility" mit TomTom Daten

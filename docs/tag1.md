@@ -21,7 +21,7 @@ Prof. Dr. Alexander Zipf (Universität Heidelberg - GIScience Research Group)
 <p>
 <img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/novack.png" alt="Tessio Novack" style="align:left; width:120px;height:120px;">
 Dr. Tessio Novack (Universität Heidelberg - GIScience Research Group)
-</p> 
+</p>
 
 ## Programm
 Ziel des heutigen Themenblocks ist es: Einführung in GIS und in Urban Data Science.
@@ -31,4 +31,10 @@ Ziel des heutigen Themenblocks ist es: Einführung in GIS und in Urban Data Scie
 *	11:30 - 12:30 Übung zum Thema "Einführung in GIS"
 *	14:00 - 14:45 Einführung zur Übung "Spatial Regression Models"
 *	14:45 - 17:00 Übung zum Thema "Spatial Regression Models"
-*	17:00 - 17:30 Abschlussdiskussion 
+*	17:00 - 17:30 Abschlussdiskussion
+
+## Daten
+
+<p>
+<a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag1/Exercise1.zip">Exercise1.zip</a>
+</p>

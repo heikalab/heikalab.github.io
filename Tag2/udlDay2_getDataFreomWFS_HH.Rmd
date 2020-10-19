@@ -1,0 +1,110 @@
+---
+title: "Urban data lab - day 2 - load data from WFS - charging stations HH"
+author: "Sven Lautenbach"
+date: "10/18/2020"
+output: 
+  html_document: 
+    toc: yes
+    highlight: espresso
+    number_sections: yes
+    theme: sandstone
+---
+
+```{r setup, include=FALSE}
+# you need to adapt this path to your local machine
+# Windows users be careful: use the slash '/' not the backslash '\'
+# as the path separator
+ws <-"/home/slautenb/Documents/lehre/HD/ws_2020_21/heikaLab/R4UrbanDataLab_2020/" 
+require(knitr)
+opts_chunk$set(echo = TRUE)
+opts_knit$set(root.dir = ws)
+# handling of spatial data
+require(sf)
+require(tmap) # map creation
+require(ows4R) # acces OGC webservices
+
+require(httr)
+require(tidyverse) # 
+require(ggplot2)
+```
+
+# Preparation
+
+Ensure that local folder structure exists
+
+```{r}
+dataFolder = paste0(ws, "/data/")
+if(!dir.exists(dataFolder))
+  dir.create(dataFolder)
+```
+
+# Getting the data from a WFS
+
+```{r}
+wfsUrl <- "https://geodienste.hamburg.de/HH_WFS_EMobility"
+```
+
+Connect to the service
+
+```{r}
+hh_client <- WFSClient$new(wfsUrl, 
+                            serviceVersion = "2.0.0")
+```
+
+What are the capabilities of the service?
+
+```{r}
+hh_client$getCapabilities()
+```
+
+
+Which features are present?
+```{r}
+hh_client$getFeatureTypes(pretty = TRUE)
+```
+Get the features from app:stromnetz_emobility
+```{r}
+wfsUrlParsed <- parse_url(wfsUrl)
+wfsUrlParsed$query <- list(service = "wfs",
+                  version = "2.0.0",
+                  request = "GetFeature",
+                  typename = "app:stromnetz_emobility",
+                  srsname='urn:x-ogc:def:crs:EPSG:25832',
+                  bbox = "552378.61, 5921782.142, 582209.533, 5956674.616")
+request <- build_url(wfsUrlParsed)
+
+chargingStations <- read_sf(request) 
+```
+
+See what we have got:
+
+```{r}
+names(chargingStations)
+```
+
+The CRS did not make it through the request so we need to manually assign the CRS. The meta-data of the service indicate that it is EPSG:25832 (UTM zone 32N).
+
+```{r}
+st_crs(chargingStations) <- 25832
+```
+
+
+```{r}
+tmap_mode("view")
+tm_shape(chargingStations) + tm_dots(col = "anzahl_ladepunkte", size=0.5, alpha=.5) + tm_basemap(server= "OpenStreetMap.DE")
+```
+We could even get information on the current status of the charging station.
+
+```{r}
+tmap_mode("view")
+tm_shape(chargingStations) + tm_dots(col = "ladesaeule_status", size=0.5, alpha=.5) + tm_basemap(server= "OpenStreetMap.DE")
+```
+
+## Save data to geopackage
+
+We will not be using the live data but just the locations in the following. Therefore, it is fine to save the data - which might save us some time later on.
+
+```{r}
+st_write(chargingStations, dsn= paste0(dataFolder, "HH.gpkg"), layer="chargingStations", delete_layer=TRUE)
+```
+

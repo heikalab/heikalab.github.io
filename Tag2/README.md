@@ -38,4 +38,4 @@ Ihr müsst wahrscheinlich die HTML Seiten zusammen mit den Scripten runterladen 
 
 ### Nicht-räumliche und räumliche Regression
 *  <a href="https://heikalab.github.io/urbandatascience/Tag2/udlDay2_spatialReg_HH.Rmd">Script</a>
-* <a href=https://heikalab.github.io/urbandatascience/Tag2/udlDay2_spatialReg_HH.html">HTML Notebook</a>
+* <a href="https://heikalab.github.io/urbandatascience/Tag2/udlDay2_spatialReg_HH.html">HTML Notebook</a>

@@ -1,4 +1,5 @@
-# Tag 1
+# Tag 1 - Einführung GIScience und räumliche statistik mit GeoDa
+
 Die Ordner enthalten jeweils Daten und Aufgabenstellungen für das Material am 1. Tag des Urban Data Lab
 
 * <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag1/Exercise1.zip">Exercise1.zip</a>

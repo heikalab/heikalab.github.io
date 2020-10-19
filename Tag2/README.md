@@ -3,7 +3,7 @@
 Wir werden uns heute nocheinmal mit der räumlichen Regression beschäftigen. Diesmal wollen wir R und R-Studio benutzen.
 
 ## Installation
-Zuerst muss <a href="https://cran.r-project.org/">R</> installiert werden. Dann kann die kostenlose Version von <a href="https://rstudio.com/products/rstudio/download/">Rstudio</a> installiert werden.
+Zuerst muss <a href="https://cran.r-project.org/">R</a> installiert werden. Dann kann die kostenlose Version von <a href="https://rstudio.com/products/rstudio/download/">Rstudio</a> installiert werden.
 
 Installationanleitungen für die gängigen Betriebssysteme sind auf den Seiten zu finden.
 

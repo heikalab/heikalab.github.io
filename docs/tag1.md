@@ -35,6 +35,6 @@ Ziel des heutigen Themenblocks ist es: Einführung in GIS und in Urban Data Scie
 
 ## Daten
 
-<p>
-<a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag1/Exercise1.zip">Exercise1.zip</a>
-</p>
+* <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag1/Exercise1.zip">Exercise1.zip</a>
+* <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag1/Exercise2.zip">Exercise2.zip</a>
+* <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag1/Exercise3.zip">Exercise3.zip</a>

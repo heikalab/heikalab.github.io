@@ -34,4 +34,4 @@ Ziel des heutigen Themenblocks ist es: Einführung in die räumliche Statistik.
   * 16:00 - 17:30 Übung + Besprechung
 
 ## Daten und Scripte
-<a href="..Tag2/README.md">Tag 2 </a>
+<a href="../Tag2/README.md">Tag 2 </a>

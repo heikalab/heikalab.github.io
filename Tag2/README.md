@@ -7,6 +7,10 @@ Zuerst muss <a href="https://cran.r-project.org/">R</> installiert werden. Dann 
 
 Installationanleitungen für die gängigen Betriebssysteme sind auf den Seiten zu finden.
 
+Bitte installiert auch die benötigten R-packages. Am einfachsten könnte ihr folgendes <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag2/installRequiredPackages.r">R-Script</a> herunterladen und dann in Rstudio öffen und ausführen. Falls es dabei zu Fehlermeldungen kommt, kopiert die bitte, damit wir das Morgen ggf. noch lösen können.
+
+
+
 ## Organisation des Workspace
 
 Die Scripte gehen davon aus, dass es einen Ordner (z.B. Tag2/) gibt, in dem sich alle Scripte des Tages befinden sowie ein Unterordner *data*, in dem sich alle Daten befinden. Hierbei müssen die Zip-Archive mit den Shapefiles entpackt sein.

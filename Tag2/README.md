@@ -27,15 +27,15 @@ Die Scripte gehen davon aus, dass es einen Ordner (z.B. Tag2/) gibt, in dem sich
 Ihr müsst wahrscheinlich die HTML Seiten zusammen mit den Scripten runterladen und dann im Webbrowser eurer Wahl öffnen.
 
 ### Laden der Daten über einen OGC WebFeatureService (WFS)
-*  <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag2/udlDay2_getDataFreomWFS_HH.Rmd">Script</a>
-* <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag2/udlDay2_getDataFreomWFS_HH.html">HTML Notebook</a>
+*  <a href="https://heikalab.github.io/urbandatascience/Tag2/udlDay2_getDataFreomWFS_HH.Rmd">Script</a>
+* <a href="https://heikalab.github.io/urbandatascience/Tag2/udlDay2_getDataFreomWFS_HH.html">HTML Notebook</a>
 
 
 ### Explorative Analyse
-*  <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag2/udlDay2_explorative_HH.Rmd">Script</a>
-* <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag2/udlDay2_explorative_HH.html">HTML Notebook</a>
-* <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag2/plotLocalMoransI.r">Script zum Plotten von Local Moran's I</a>
+*  <a href="https://heikalab.github.io/urbandatascience/Tag2/udlDay2_explorative_HH.Rmd">Script</a>
+* <a href="https://heikalab.github.io/urbandatascience/Tag2/udlDay2_explorative_HH.html">HTML Notebook</a>
+* <a href="https://heikalab.github.io/urbandatascience/Tag2/plotLocalMoransI.r">Script zum Plotten von Local Moran's I</a>
 
 ### Nicht-räumliche und räumliche Regression
-*  <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag2/udlDay2_spatialReg_HH.Rmd">Script</a>
-* <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag2/udlDay2_spatialReg_HH.html">HTML Notebook</a>
+*  <a href="https://heikalab.github.io/urbandatascience/Tag2/udlDay2_spatialReg_HH.Rmd">Script</a>
+* <a href=https://heikalab.github.io/urbandatascience/Tag2/udlDay2_spatialReg_HH.html">HTML Notebook</a>

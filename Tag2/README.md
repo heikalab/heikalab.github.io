@@ -13,10 +13,10 @@ Die Scripte gehen davon aus, dass es einen Ordner (z.B. Tag2/) gibt, in dem sich
 
 ## Daten
 
-* <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag2/HH.gpkg">Geopackage mit den Ladestationen für Hamburg</a>
-* <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag2/chargingStations_berlin.zip">Zip Archiv mit dem Shapefile der Ladestationen für Berlin</a>
-* <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag2/popPoly.zip">Zip Archiv mit dem Shapefile der Bevölkerungsinformation für Hamburg</a>
-* <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag2/Berlin.gpkg">Geopackage mit den Bevölkerungsdaten für Berlin</a>
+* <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag2/data/HH.gpkg">Geopackage mit den Ladestationen für Hamburg</a>
+* <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag2/data/chargingStations_berlin.zip">Zip Archiv mit dem Shapefile der Ladestationen für Berlin</a>
+* <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag2/data/popPoly.zip">Zip Archiv mit dem Shapefile der Bevölkerungsinformation für Hamburg</a>
+* <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag2/data/Berlin.gpkg">Geopackage mit den Bevölkerungsdaten für Berlin</a>
 
 ## Scripte
 

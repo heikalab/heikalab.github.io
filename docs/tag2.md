@@ -22,7 +22,14 @@ Dr. Sven Lautenbach (HeiGIT)
 Ziel des heutigen Themenblocks ist es: Einführung in die räumliche Statistik.
 *	09:00 - 09:30 Impulsvortrag von Dr. Sina Keller
 *	09:30 - 10:00 Räumliche Statistik: räumliche Autokorrelation und Maße diese zu erfassen, Nachbarschaftsdefinitionen und Gewichte (Sven Lautenbach)
-*	10:00 - 10:30 Einführung Jupyter Notebook am Beispiel Ladestationen am Beispiel von Hamburg - Visualisierung und erste räumliche Analyen (Sven Lautenbach)
-* 10:45 - 12:30 Übung
-* 14:00 - 17:30 Jupyter Notebook Nachbarschaftsdefinitionen und räumliche Autokorrelation
-* 14:00 - 17:30 Übung
+* Analyse der Verteilung von Ladestationen für Elektromobilität am Beispiel von Hamburg -  (Sven Lautenbach)
+  *	10:15 - 10:45 Laden der Daten mittels eines WFS
+  * 10:45 - 11:15 Explorative Analyse
+  * 11:15 - 12:30 Übung + Besprechung
+  * 14:00 - 14:30 Nicht-räumliche Regression, Nachbarschaftsdefinitionen und räumliche Autokorrelation
+  * 14:30 - 15:15 Übung + Besprechung
+  * 15:30 - 16:00 Räumliche Regression, spatial lag, spatially lagged predictors, spatial eigenvector mapping
+  * 16:00 - 17:30 Übung + Besprechung
+
+## Daten und Scripte
+<a href="..Tag2/README.md">Tag 2 </a>

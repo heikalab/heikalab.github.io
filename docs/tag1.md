@@ -38,3 +38,8 @@ Ziel des heutigen Themenblocks ist es: Einführung in GIS und in Urban Data Scie
 * <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag1/Exercise1.zip">Exercise1.zip</a>
 * <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag1/Exercise2.zip">Exercise2.zip</a>
 * <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag1/Exercise3.zip">Exercise3.zip</a>
+
+## Vorträge
+
+  * <a href="../Tag1/novack_intro_3_20201019.pdf">Einführung</a>
+  * <a href="../Tag1/novack_vortrag_20201019.pdf">Räumliche Statistik</a>

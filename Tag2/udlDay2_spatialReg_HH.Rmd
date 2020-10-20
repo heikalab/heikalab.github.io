@@ -210,6 +210,12 @@ AIC value smaller -> better fit.
 ggplot(popChargingCleaned, mapping= aes(x=pop_total, y= sumChargingPoints)) + geom_point(alpha=.25) + geom_smooth(method="glm", formula= y ~ sqrt(x), method.args = list(family = "poisson")) + labs(title="Charging stations Hamburg", subtitle = "1sqm grid cells, Poisson GLM") + xlab("Population") + ylab("Number of charging points")
 ```
 
+## Exercise
+Rerun the analysis using the data from Berlin. The population data is stored in the geopackage *Berlin.gpkg*, the name of the layer is *population*.
+
+**Take care**: the Berlin data does not contain information on the number of charging points. The simplest solution would be to add a field *count*, set it to 1 and use that instead of the number of charging points.
+Also the files have different names for the attribute tables. The id of the population data set is named *idPoly* while the charging stations have a field *id* as an unique identifier.
+
 ### Check spatial autocorrelation
 
 #### Define neighborhood

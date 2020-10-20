@@ -69,7 +69,10 @@ pop$pop_total[idx] <- NA
 
 ```{r}
 tmap_mode("view")
-tm_shape(pop) + tm_fill(col="pop_total", convert2density = TRUE, alpha=.5, pallette="plasma", style="kmeans") + tm_shape(charging_stations) + tm_dots(alpha=.5)
+tm_shape(pop) + 
+  tm_fill(col="pop_total", convert2density = TRUE, alpha=.5, pallette="plasma", style="kmeans") + 
+  tm_shape(charging_stations) + 
+  tm_dots(alpha=.5)
 ```
 ## Spatial join between the data
 
@@ -97,18 +100,23 @@ head(chargingStationsPoly)
 We will drop geometries here since they tend to mix up things.
 
 ```{r}
-chargingStationsPolyWide <- chargingStationsPoly %>% st_drop_geometry() %>% pivot_wider( id_cols = id, names_from = statID, values_from = anzahl_ladepunkte)
+chargingStationsPolyWide <- chargingStationsPoly %>% 
+  st_drop_geometry() %>% 
+  pivot_wider( id_cols = id, names_from = statID, values_from = anzahl_ladepunkte)
 ```
 Next we simply add up numbers across rows, ignoring NA values
 
 ```{r}
-chargingStationsPolyWide$sumChargingPoints <- chargingStationsPolyWide %>% select(-one_of("id")) %>% rowSums(na.rm=TRUE)
+chargingStationsPolyWide$sumChargingPoints <- chargingStationsPolyWide %>%
+  select(-one_of("id")) %>% 
+  rowSums(na.rm=TRUE)
 ```
 
 Drop the other columns
 
 ```{r}
-chargingStationsPolyWide <- chargingStationsPolyWide %>% select(c(id, sumChargingPoints ))
+chargingStationsPolyWide <- chargingStationsPolyWide %>% 
+  select(c(id, sumChargingPoints ))
 ```
 
 
@@ -150,7 +158,8 @@ popChargingCleaned <- popCharging[-idx,]
 ### Linear model
 
 ```{r}
-ggplot(popChargingCleaned, mapping= aes(x=pop_total, y= sumChargingPoints)) + geom_point()
+ggplot(popChargingCleaned, mapping= aes(x=pop_total, y= sumChargingPoints)) +
+  geom_point()
 ```
 
 So it looks as if we have a relationship between the two variables. Lets fit a simple linear model to the data.
@@ -165,7 +174,11 @@ So we have a signisifcant positive effect of population on the number of chargng
 How does the regression line looks like?
 
 ```{r}
-ggplot(popChargingCleaned, mapping= aes(x=pop_total, y= sumChargingPoints)) + geom_point(alpha=.25) + geom_smooth(method="lm") + labs(title="Charging stations Hamburg", subtitle = "1sqm grid cells") + xlab("Population") + ylab("Number of charging points")
+ggplot(popChargingCleaned, mapping= aes(x=pop_total, y= sumChargingPoints)) +
+  geom_point(alpha=.25) + 
+  geom_smooth(method="lm") + 
+  labs(title="Charging stations Hamburg", subtitle = "1sqm grid cells") +
+  xlab("Population") + ylab("Number of charging points")
 ```
 
 The regression line fit the data not too well.
@@ -190,7 +203,11 @@ summary(poisModel)
 
 
 ```{r}
-ggplot(popChargingCleaned, mapping= aes(x=pop_total, y= sumChargingPoints)) + geom_point(alpha=.25) + geom_smooth(method="glm", method.args = list(family = "poisson")) + labs(title="Charging stations Hamburg", subtitle = "1sqm grid cells, Poisson GLM") + xlab("Population") + ylab("Number of charging points")
+ggplot(popChargingCleaned, mapping= aes(x=pop_total, y= sumChargingPoints)) +
+  geom_point(alpha=.25) + 
+  geom_smooth(method="glm", method.args = list(family = "poisson")) +
+  labs(title="Charging stations Hamburg", subtitle = "1sqm grid cells, Poisson GLM") +
+  xlab("Population") + ylab("Number of charging points")
 ```
 
 ```{r}
@@ -207,7 +224,11 @@ summary(poisModel)
 AIC value smaller -> better fit.
 
 ```{r}
-ggplot(popChargingCleaned, mapping= aes(x=pop_total, y= sumChargingPoints)) + geom_point(alpha=.25) + geom_smooth(method="glm", formula= y ~ sqrt(x), method.args = list(family = "poisson")) + labs(title="Charging stations Hamburg", subtitle = "1sqm grid cells, Poisson GLM") + xlab("Population") + ylab("Number of charging points")
+ggplot(popChargingCleaned, mapping= aes(x=pop_total, y= sumChargingPoints)) +
+  geom_point(alpha=.25) + 
+  geom_smooth(method="glm", formula= y ~ sqrt(x), method.args = list(family = "poisson")) + 
+  labs(title="Charging stations Hamburg", subtitle = "1sqm grid cells, Poisson GLM") +
+  xlab("Population") + ylab("Number of charging points")
 ```
 
 ## Exercise
@@ -341,7 +362,9 @@ correlogResidLm <- ncf::correlog(coordinates(popChargingCleanedSp)[,1], coordina
 na.rm=TRUE, increment=500, resamp=0)
 
 par(mar=c(5,7, 4.1, 0.1))
-plot(correlogResidLm$correlation[1:20] ~ correlogResidLm$mean.of.class[1:20] , type="b", pch=16, cex=sqrt(correlogResidLm$n)/70, lwd=1.5, xlab="distance ", ylab="", cex.lab=1, cex.axis=1, las=1, main="Linear model, Hamburg")
+plot(correlogResidLm$correlation[1:20] ~ correlogResidLm$mean.of.class[1:20] , type="b", pch=16, 
+     cex=sqrt(correlogResidLm$n)/70, lwd=1.5, xlab="distance ", ylab="", cex.lab=1, cex.axis=1, 
+     las=1, main="Linear model, Hamburg")
 abline(h=0)
 mtext(text = "Moran's I", side = 2, line = 5, cex=1)
 ```
@@ -357,14 +380,16 @@ source("plotLocalMoransI.r")
 ```
 
 ```{r, fig.height=7}
-mylocalMI(plotvar= popChargingCleanedSp$residLm, nb =  pop.lw, shape =  popChargingCleanedSp, main = "LISA on residuals of linear model, Hamburg", verbose = FALSE, zero.policy = TRUE)
+mylocalMI(plotvar= popChargingCleanedSp$residLm, nb =  pop.lw, shape =  popChargingCleanedSp, 
+          main = "LISA on residuals of linear model, Hamburg", verbose = FALSE, zero.policy = TRUE)
 ```
 
 Clearly, there is a cluster of high residuals in the center and several clusters with low residuals. surrounded by cells with low residuals.
 
 ```{r}
 tmap_mode("view")
-tm_shape(popChargingCleanedSp) + tm_fill(col="residLm", palette = "-RdBu", midpoint=0)
+tm_shape(popChargingCleanedSp) + 
+  tm_fill(col="residLm", palette = "-RdBu", midpoint=0)
 ```
 
 So for sure we have a problem with spatial autocorrelation. Let's look at different possibilities how to deal with it.
@@ -378,7 +403,8 @@ $y = \rho W y + X \beta + \epsilon$
 The operation is computational intense so you potentially can get a cup of coffee while you wait for the resuls. Setting *method="SE_classic"* is much faster by an approximation used and might be fine for our case.
 
 ```{r, cache=TRUE}
-lagModel2 <- lagsarlm(sumChargingPoints ~ pop_total, data=popChargingCleaned, listw=pop.lw, zero.policy=TRUE, method="SE_classic")
+lagModel2 <- lagsarlm(sumChargingPoints ~ pop_total, data=popChargingCleaned, listw=pop.lw, 
+                      zero.policy=TRUE, method="SE_classic")
 summary(lagModel2)
 ```
 This would be the more intense computaion - which lead for the data at hands to very similar results.
@@ -428,12 +454,16 @@ popChargingCleaned$residSlx <- residuals(slxModel)
 
 ```{r}
 tmap_mode("view")
-tm_shape(popChargingCleaned) + tm_fill(col="residLag", palette = "-RdBu", midpoint=0, alpha=0.5) + tm_layout(title="Residuals spatial lag model, Hamburg")
+tm_shape(popChargingCleaned) + 
+  tm_fill(col="residLag", palette = "-RdBu", midpoint=0, alpha=0.5) +
+  tm_layout(title="Residuals spatial lag model, Hamburg")
 ```
 
 ```{r}
 tmap_mode("view")
-tm_shape(popChargingCleaned) + tm_fill(col="residSlx", palette = "-RdBu", midpoint=0, alpha=0.5) + tm_layout(title="Residuals spatially lagged X model, Hamburg")
+tm_shape(popChargingCleaned) + 
+  tm_fill(col="residSlx", palette = "-RdBu", midpoint=0, alpha=0.5) +
+  tm_layout(title="Residuals spatially lagged X model, Hamburg")
 ```
 If we study the distribution of the residuals we see that the pattern is different, having a more random pattern for the spatial lag model, which is beneficial.
 

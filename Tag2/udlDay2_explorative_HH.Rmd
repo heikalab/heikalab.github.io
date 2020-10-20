@@ -80,7 +80,14 @@ kdeRas_scaledContour <- rasterToContour(kdeRas_scaled)  %>%   st_as_sf()
 
 
 ```{r}
-tm_shape(kdeRas_scaled) + tm_raster(col="layer", alpha = .5, palette ="-plasma", title = "Kernel density estimate", style = "kmeans" ) + tm_shape(charging_stations) + tm_dots(alpha=.5) + tm_shape(kdeRas_scaledContour) + tm_lines() + tm_text(text="level", col="white", shadow=TRUE, along.lines=TRUE)
+tmap_mode("view")
+tm_shape(kdeRas_scaled) +
+  tm_raster(col="layer", alpha = .5, palette ="-plasma", title = "Kernel density estimate", style = "kmeans" ) + 
+  tm_shape(charging_stations) + 
+  tm_dots(alpha=.5) + 
+  tm_shape(kdeRas_scaledContour) + 
+  tm_lines() + 
+  tm_text(text="level", col="white", shadow=TRUE, along.lines=TRUE)
 ```
 
 ## How far are the stations away from each other?
@@ -152,7 +159,12 @@ osm_hh <- read_osm(charging_stations, ext=1.1)
 
 ```{r}
 tmap_mode("plot")
-tm_shape(osm_hh) + tm_rgb() + tm_shape(charging_stations) + tm_dots(size="meanDist10", legend.size.show = TRUE, title.size = "Mean distance to closest 10 stations" ) + tm_basemap(server= "OpenStreetMap.DE") + tm_layout(legend.outside=TRUE) + tm_scale_bar()
+tm_shape(osm_hh) + tm_rgb() + 
+  tm_shape(charging_stations) + 
+  tm_dots(size="meanDist10", legend.size.show = TRUE, title.size = "Mean distance to closest 10 stations" ) + 
+  tm_basemap(server= "OpenStreetMap.DE") + 
+  tm_layout(legend.outside=TRUE) + 
+  tm_scale_bar()
 ```
 
 We see that distances are (not unexpectedly increaing from the city center).
@@ -184,8 +196,12 @@ nClust <- length(unique(db_hh$cluster))
 
 ```{r}
 tmap_mode("view")
-tm_shape(charging_stations) + tm_dots(col = "dbCluster", size=0.25, alpha=.5, palette="Accent", n=nClust) + tm_basemap(server= "OpenStreetMap.DE") + tm_scale_bar()
+tm_shape(charging_stations) + 
+  tm_dots(col = "dbCluster", size=0.25, alpha=.5, palette="Accent", n=nClust) +
+  tm_basemap(server= "OpenStreetMap.DE") + 
+  tm_scale_bar()
 ```
+
 # Exercise
 
 Perform the same anlysis with the dataset chargingStations_berlin.shp. You can load the shapefile by simply passing the folder name and the name of the shapefile (including the .shp extension) to st_read.

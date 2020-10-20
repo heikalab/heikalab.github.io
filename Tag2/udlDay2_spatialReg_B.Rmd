@@ -1,0 +1,504 @@
+---
+title: "Urban data lab - day 2 - spatial statistics - charging stations Berlin"
+author: "Sven Lautenbach"
+date: "10/18/2020"
+output: 
+  html_document: 
+    toc: yes
+    highlight: espresso
+    number_sections: yes
+    theme: sandstone
+---
+
+```{r setup, include=FALSE}
+# you need to adapt this path to your local machine
+# Windows users be careful: use the slash '/' not the backslash '\'
+# as the path separator
+ws <-"/home/slautenb/Documents/lehre/HD/ws_2020_21/heikaLab/R4UrbanDataLab_2020/" 
+require(knitr)
+opts_chunk$set(echo = TRUE)
+opts_knit$set(root.dir = ws)
+# handling of spatial data
+require(sf)
+require(tmap) # map creation
+#require(ows4R) # acces OGC webservices
+require(spdep)
+require(spatialreg)
+require(ncf)
+
+#require(httr)
+require(tidyverse)  
+require(ggplot2)
+```
+
+# Preparation
+
+```{r}
+dataFolder <- paste0(ws, "data/")
+```
+
+
+Load data from geopackage
+
+
+```{r}
+charging_stations <- st_read(dsn=paste0(dataFolder, "chargingStations_berlin.shp"))
+```
+
+# Non-spatial regression
+
+What drives the clustered pattern of charging stations? One assumption could be that it is related to population density. The more people inhabit a plce the higher the number of charing statiosn. This is of course overly simplistic but it is a start.
+
+Read population shapefile
+
+
+```{r}
+pop <- st_read(dsn= paste0(dataFolder, "Berlin.gpkg"), layer="population")
+```
+
+```{r}
+summary(pop)
+```
+-1 represents mising data so these need to be set to NA
+
+```{r}
+idx <- which(pop$pop_total == -1)
+pop$pop_total[idx] <- NA
+```
+
+
+```{r}
+tmap_mode("view")
+tm_shape(pop) + tm_fill(col="pop_total", convert2density = TRUE, alpha=.5, pallette="plasma", style="kmeans") + tm_shape(charging_stations) + tm_dots(alpha=.5)
+```
+## Spatial join between the data
+
+To study the relationship between the two variables we need to combine them. A straight forward approach is a spatial join that counts the number of charging places (one charging station could have more than one charging point) per vector grid cell of the population data set.
+
+First we join the polygon information to the charging stations.
+
+Add a simple ID to the charging stations since gml_id is cumbersome.
+
+```{r}
+charging_stations$statID <- paste0("charge_", 1:nrow(charging_stations))
+```
+
+
+```{r}
+chargingStationsPoly <- st_join(charging_stations, pop)
+```
+
+### Aggregate the number of charging points per grid cell
+
+```{r}
+head(chargingStationsPoly)
+```
+
+We will drop geometries here since they tend to mix up things. We have no information on the number of charging points so we will simply use the count
+
+```{r}
+chargingStationsPoly$count <- 1
+chargingStationsPolyWide <- chargingStationsPoly %>%
+  st_drop_geometry() %>% 
+  pivot_wider( id_cols = idPoly, names_from = statID, values_from = count)
+```
+
+```{r}
+head(chargingStationsPolyWide[,1:10])
+```
+
+
+Next we simply add up numbers across rows, ignoring NA values
+
+```{r}
+chargingStationsPolyWide$sumChargingStations <- chargingStationsPolyWide %>% 
+  select(-one_of("idPoly")) %>% 
+  rowSums(na.rm=TRUE)
+```
+
+```{r}
+head(chargingStationsPolyWide[,c("idPoly", "sumChargingStations", "charge_1", "charge_2")])
+```
+
+Drop the other columns
+
+```{r}
+chargingStationsPolyWide <- chargingStationsPolyWide %>% select(c(idPoly, sumChargingStations ))
+```
+
+```{r}
+head(chargingStationsPolyWide)
+```
+
+
+### Join aggregated table to polygons
+
+We can join the resulting aggregated data frame to the polygon data set based on glm_id. Let us check if that is a qunique id:
+
+```{r}
+length(pop$idPoly)
+length(unique(pop$idPoly))
+```
+
+Yes, no dublicates.
+
+```{r}
+popCharging <- merge(pop, chargingStationsPolyWide, by="idPoly", all.x=TRUE)
+dim(popCharging)
+head(popCharging)
+```
+
+```{r}
+summary(popCharging)
+```
+We have a lot of NA values which indicate - in our case here - that no charging points are present. So we should set them to zero.
+
+```{r}
+idx <- which(is.na(popCharging$sumChargingStations))
+popCharging$sumChargingStations[idx] <- 0
+```
+
+For pop_total we have real missing values. For the regression analysis it is best to drop those rows.
+
+```{r}
+idx <- which(is.na(popCharging$pop_total))
+popChargingCleaned <- popCharging[-idx,]
+```
+
+## Fit non-spatial regression models
+
+### Linear model
+
+```{r}
+ggplot(popChargingCleaned, mapping= aes(x=pop_total, y= sumChargingStations)) + geom_point()
+```
+
+The relationship looks different from the one from Hamburg. There are some interesting outliers.
+
+```{r}
+lmModel <- lm(sumChargingStations ~ pop_total, data=popChargingCleaned)
+summary(lmModel)
+```
+
+So we have a signisifcant positive effect of population on the number of chargng points. For grid cells with 1000 inhabitants more we expect on average 2.132 more charging stations.
+
+How does the regression line looks like?
+
+```{r}
+ggplot(popChargingCleaned, mapping= aes(x=pop_total, y= sumChargingStations)) + geom_point(alpha=.25) + geom_smooth(method="lm") + labs(title="Charging stations Berlin", subtitle = "1sqm grid cells") + xlab("Population") + ylab("Number of charging stations")
+```
+
+
+How do the residulas look like?
+
+```{r}
+par(mfrow=c(2,3))
+plot(lmModel, which=1:6)
+```
+
+Long story short: not normally distributed (thought not as bad as for Hamburg), a few grid cells with large cook's distance (influential points).
+
+### Count regression
+
+Another option would be to fit a generalized linear model with a Poisson distribution and a log link:
+
+```{r}
+poisModel <- glm(sumChargingStations ~ pop_total, data=popChargingCleaned, family=poisson)
+summary(poisModel)
+```
+
+
+```{r}
+ggplot(popChargingCleaned, mapping= aes(x=pop_total, y= sumChargingStations)) + geom_point(alpha=.25) + geom_smooth(method="glm", method.args = list(family = "poisson")) + labs(title="Charging stations Berlin", subtitle = "1sqm grid cells, Poisson GLM") + xlab("Population") + ylab("Number of charging stations")
+```
+
+```{r}
+AIC(lmModel)
+AIC(poisModel)
+```
+
+The Poisson model fits the data better, indicated by the smaller AIC. HWe might think about transforming the predictor, e.g. by a square root transformation.
+
+
+
+```{r}
+poisModel <- glm(sumChargingStations ~ sqrt(pop_total), data=popChargingCleaned, family=poisson)
+summary(poisModel)
+AIC(poisModel)
+```
+AIC value smaller -> better fit.
+
+```{r}
+ggplot(popChargingCleaned, mapping= aes(x=pop_total, y= sumChargingStations)) + geom_point(alpha=.25) + geom_smooth(method="glm", formula= y ~ sqrt(x), method.args = list(family = "poisson")) + labs(title="Charging stations Berlin", subtitle = "1sqm grid cells, Poisson GLM") + xlab("Population") + ylab("Number of charging stations")
+```
+
+
+### Check spatial autocorrelation
+
+#### Define neighborhood
+
+Define neighborhood as polygons sharing at least one point - queen neighborhood as the default.
+
+```{r}
+pop.nb <- poly2nb(popChargingCleaned)
+print(pop.nb)
+```
+
+No regions without links were reported!
+
+Convert to sp objects. This is needed for some analysis. *sp* and *sf* are two packes designed to work with spatial data. *sf* is more recent and from my perspective easier to work with and faster. Sinc *sp* has been around for a longer time it has more packages accepting it as an input (and not *sf* objects). While a nuisance, it is not a big effort to convert from one representation to another and it is a lossless conversion.
+
+Get the residuals to the polygon data set:
+
+```{r}
+popChargingCleaned$residLm <- residuals(lmModel)
+popChargingCleaned$residPoissonSqrt <- residuals(poisModel)
+```
+
+
+```{r}
+popChargingCleanedSp <- as(popChargingCleaned, "Spatial")
+```
+
+
+```{r, fig.width= 10, fig.height=7}
+plot(popChargingCleanedSp, border="grey")
+plot(pop.nb, coords=coordinates(popChargingCleanedSp)[,1:2], col="brown", add=TRUE, points=FALSE)
+```
+The neighbor list is symetric.
+
+```{r}
+is.symmetric.nb(pop.nb)
+```
+
+Create spatial weight Matrix from the neighbors using row standardization
+```{r}
+pop.lw <- nb2listw(pop.nb, style="W", zero.policy = TRUE)
+```
+ 
+```{r}
+hist(unlist(pop.lw$weights), las=1, xlab="weights", main="Continguity nb, W")
+```
+
+##### kNN as an alternative
+
+As an alternative we could use e.g. the 8 nearest neighbors
+
+```{r}
+pop.k8nb <- knn2nb(knearneigh(coordinates(popChargingCleanedSp), k = 8))
+```
+
+```{r, fig.width= 10, fig.height=7}
+plot(popChargingCleanedSp, border="grey")
+plot(pop.k8nb, coords=coordinates(popChargingCleanedSp), col="red", add=TRUE, cex=.7)
+``` 
+
+The neighbor list is not symetric.
+
+```{r}
+is.symmetric.nb(pop.k8nb)
+```
+
+
+Create weighted list.
+```{r}
+pop.k8lw <- nb2listw(pop.k8nb, style="W")
+```
+
+All census tracks have the same number of neighbors
+
+```{r}
+par(mfrow=c(1,2))
+hist(unlist(pop.lw$weights), las=1, xlab="weights", main="Continguity nb, W", col="blue")
+hist(unlist(pop.k8lw$weights), las=1, xlab="weights", main="nn-8 nb, W", col="blue")
+```
+
+We could also calculate distances and inversely weight by distance before row-standardization.
+
+```{r}
+dlist <- nbdists(pop.k8nb, coordinates(popChargingCleanedSp))
+dlist <- lapply(dlist, function(x) 1/x)
+pop.k8lwDist <- nb2listw(pop.k8nb, glist=dlist, style = "W")
+hist(unlist(pop.k8lwDist$weights), las=1, xlab="weights", main="nn-8 nb, idw, W", col="blue")
+```
+
+The idw (inverse distance weighted) approach can be applied to the other neighborhood definitions as well.
+
+#### Global spatial autocorrelation - Moran's I
+
+Moran's I is calculated based on a neighborhood definition (weighted list) as well as the definition of the number of zones (typically the number of features) and the global sum of weights. Convenience functions help to get the required parameter.
+
+*moran.test* provides the according test statistics. Like usual, don't get just excited about p-values but also look at the absolute numbers.
+
+```{r}
+lm.morantest(lmModel, listw = pop.lw, zero.policy=TRUE)
+```
+Significant but low spatial autocorrelation.
+
+```{r}
+lm.morantest(poisModel, listw = pop.lw, zero.policy=TRUE)
+```
+
+This indicates strong positive spatial autocorrelation for both the linear model as well as the GLM. However, the absolute size for the linear model is relatively week.
+
+### Correlogram
+
+A correlogram basically calculates Moran's for different distance classes. We use the function *correlog* from package *ncf* for this purpose. The method works on distance and does not consider a weight matrix W.
+
+*increment* specifies the size of the bins (distance bands) for the calculation and is measured in the coordinates of the spatial data (meters for our data set).
+
+*resamp* allows the specification of the number of iterations for a permutation test.
+
+The results contain the value of Moran's I in slot *correlation*, the average of the distances for eac distance class in * mean.of.class$, the number of pairs within each distance class in *n*, the p-value (if resamp > 0) in *p*.
+
+Here I plot the first 20 distance bands and reflecting a scaled version of the number of pairs in the distance band for the point size .
+
+```{r}
+correlogResidLm <- ncf::correlog(coordinates(popChargingCleanedSp)[,1], coordinates(popChargingCleanedSp)[,2], popChargingCleanedSp$residLm,
+na.rm=TRUE, increment=500, resamp=0)
+
+par(mar=c(5,7, 4.1, 0.1))
+plot(correlogResidLm$correlation[1:20] ~ correlogResidLm$mean.of.class[1:20] , type="b", pch=16, cex=sqrt(correlogResidLm$n)/70, lwd=1.5, xlab="distance ", ylab="", cex.lab=1, cex.axis=1, las=1, main="Linear model, Berlin")
+abline(h=0)
+mtext(text = "Moran's I", side = 2, line = 5, cex=1)
+```
+
+We see how spatial autocorrelation decreases with distance between grid cells.
+
+```{r}
+correlogResidPoisSqrt <- ncf::correlog(coordinates(popChargingCleanedSp)[,1], coordinates(popChargingCleanedSp)[,2], popChargingCleanedSp$residPoissonSqrt,
+na.rm=TRUE, increment=500, resamp=0)
+
+par(mar=c(5,7, 4.1, 0.1))
+plot(correlogResidPoisSqrt$correlation[1:20] ~ correlogResidPoisSqrt$mean.of.class[1:20] , type="b", pch=16, cex=sqrt(correlogResidPoisSqrt$n)/70, lwd=1.5, xlab="distance ", ylab="", cex.lab=1, cex.axis=1, las=1, main="Poisson model sqrt trnaformation, Berlin")
+abline(h=0)
+mtext(text = "Moran's I", side = 2, line = 5, cex=1)
+```
+
+### Local Moran's I
+
+First we source a script file that helps us with plotting.
+
+```{r}
+source("plotLocalMoransI.r")
+```
+
+```{r, fig.height=7}
+mylocalMI(plotvar= popChargingCleanedSp$residLm, nb =  pop.lw, shape =  popChargingCleanedSp, main = "LISA on residuals of linear model, Berlin", verbose = FALSE, zero.policy = TRUE)
+```
+
+Clearly, there is a cluster of high residuals in the center and two small clusters with low residuals. surrounded by cells with low residuals.
+
+```{r}
+tmap_mode("view")
+tm_shape(popChargingCleanedSp) + tm_fill(col="residLm", palette = "-RdBu", midpoint=0)
+```
+
+So for sure we have a problem with spatial autocorrelation. Let's look at different possibilities how to deal with it.
+
+## Spatial lag model
+
+We fit a spatial lag model that has the form:
+
+$y = \rho W y + X \beta + \epsilon$
+
+The operation is computational intense so you potentially can get a cup of coffee while you wait for the resuls. Setting *method="SE_classic"* is much faster by an approximation used and might be fine for our case.
+
+```{r, cache=TRUE}
+lagModel2 <- lagsarlm(sumChargingStations ~ pop_total, data=popChargingCleaned, listw=pop.lw, zero.policy=TRUE, method="SE_classic")
+summary(lagModel2)
+```
+This would be the more intense computaion - which lead for the data at hands to very similar results.
+```{r, cache=TRUE, eval=FALSE}
+lagModel <- lagsarlm(sumChargingStations ~ pop_total, data=popChargingCleaned, listw=pop.lw, zero.policy=TRUE)
+summary(lagModel)
+```
+
+Interpretation of the regression coefficients is not straight forward. We need to distinguish between the direct, the indicrect (via the lagged response) and the total effect
+The total effect of a unit change in one of the predictors is:
+$\hat{\beta}/ (1- \hat{\rho})$
+
+Using the full weight matrix is computational intense for a weight matrix of our size:
+```{r, cache=TRUE, eval=FALSE}
+impacts(lagModel2, listw= pop.lw)
+```
+We will speed up computation by proving a vector of traces of powers of the spatial weights matrix created using trW, for approximate impact measures
+```{r}
+W <- as(pop.lw, "CsparseMatrix")
+#trMatc <- trW(W, type="mult")
+trMC <- trW(W, type="MC")
+```
+
+```{r}
+impacts(lagModel2, tr=trMC)
+```
+
+The see that the total effect is nearly 1.5 times as big as the direct effects. 
+
+## Spatial Durbin linear (SLX, spatially lagged X) model
+
+We now fit a lm model augmented with the spatially lagged RHS variables. The idea is to use a lagged version of the predictors in addition to the predictors.
+
+```{r}
+slxModel <- lmSLX(sumChargingStations ~ pop_total, data=popChargingCleaned, listw=pop.lw, zero.policy=TRUE)
+summary(slxModel)
+```
+```{r}
+impacts(slxModel, tr=trMC)
+```
+
+```{r}
+popChargingCleaned$residLag <- residuals(lagModel2)
+popChargingCleaned$residSlx <- residuals(slxModel)
+```
+
+
+```{r}
+tmap_mode("view")
+tm_shape(popChargingCleaned) + tm_fill(col="residLag", palette = "-RdBu", midpoint=0, alpha=0.5) + tm_layout(title="Residuals spatial lag model, Berlin")
+```
+
+```{r}
+tmap_mode("view")
+tm_shape(popChargingCleaned) + tm_fill(col="residSlx", palette = "-RdBu", midpoint=0, alpha=0.5) + tm_layout(title="Residuals spatially lagged X model, Berlin")
+```
+
+## Spatial eigenvector mapping
+
+If we want to use the count regression approach (which is more suitable), the spatial eigenvector mapping approach is the tool at hands. Unfortunately, it is again computational intense.
+
+```{r, cache=TRUE}
+sevmPoiss <- ME(sumChargingStations ~ sqrt(pop_total), data=popChargingCleaned, family=poisson, zero.policy = TRUE, listw=pop.lw)
+print(sevmPoiss)
+```
+
+```{r}
+sevmPoissModel <- glm(sumChargingStations ~ sqrt(pop_total) + fitted(sevmPoiss), data=popChargingCleaned, family=poisson)
+summary(sevmPoissModel)
+```
+Presumably we have missed a lot of other predictors that are now partially absorbed into different eigenvectors. It might be worth to plot and investigate the eigenvectors that made it into the model. Therefore, we attach the selected eigenvectors to the sf object and plot them.
+
+```{r}
+selEV <- fitted(sevmPoiss)
+
+popChargingCleanedSelEV <- st_sf(data.frame(popChargingCleaned, selEV))
+```
+
+```{r}
+for(aName in colnames(selEV))
+{ 
+  plot(popChargingCleanedSelEV[aName], border=NA) 
+}
+```
+
+These eigenvectors reval intresting pattern which should be investigated to explore further hypothesis.
+
+```{r}
+tmap_mode("view")
+tm_shape(popChargingCleanedSelEV) + tm_fill(col="vec28", alpha=.5, palette = "-RdBu", midpoint=0) + tm_shape(charging_stations) + tm_dots()
+```
+
+```{r}
+tmap_mode("view")
+tm_shape(popChargingCleanedSelEV) + tm_fill(col="vec10", alpha=.5, palette = "-RdBu", midpoint=0, n=7) + tm_shape(charging_stations) + tm_dots()
+```

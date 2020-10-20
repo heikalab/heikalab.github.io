@@ -1,0 +1,203 @@
+---
+title: "Urban data lab - day 2 - explorative analysis - charging stations Berlin"
+author: "Sven Lautenbach"
+date: "10/18/2020"
+output: 
+  html_document: 
+    toc: yes
+    highlight: espresso
+    number_sections: yes
+    theme: sandstone
+---
+
+```{r setup, include=FALSE}
+# you need to adapt this path to your local machine
+# Windows users be careful: use the slash '/' not the backslash '\'
+# as the path separator
+ws <-"/home/slautenb/Documents/lehre/HD/ws_2020_21/heikaLab/R4UrbanDataLab_2020/" 
+require(knitr)
+opts_chunk$set(echo = TRUE)
+opts_knit$set(root.dir = ws)
+# handling of spatial data
+require(sf)
+require(tmap) # map creation
+require(tmaptools)
+require(raster) # handling of raster data, map algebra etc.
+require(KernSmooth) # kernel density estimation
+require(dbscan) # dbscan clustering
+require(OpenStreetMap) # for offline background maps. Depends on rJava that might be a bit tricky to install. Functionality is not essential, you might just outcomment the lines that require OpenStreetMap-package functionality
+#require(tidyverse) # data preprocessing
+#require(ggplot2) # plotting functionality
+```
+
+# Preparation
+
+```{r}
+dataFolder <- paste0(ws, "data/")
+```
+
+
+Load data from geopackage
+
+
+```{r}
+charging_stationsB <- st_read(dsn=paste0(dataFolder, "chargingStations_berlin.shp"))
+```
+
+# Explorative analysis
+
+## Kernel density map
+
+We need to creat/define an empty raster that will store the results of the kernel density estimation
+
+```{r}
+(bboxB <- st_bbox(charging_stationsB))
+```
+
+
+```{r}
+gridsize=c(500,500)
+range_x=list(c(bboxB[1]-1000, bboxB[3]+1000),c(bboxB[2]-1000, bboxB[4]+1000))
+kdeMat <-  bkde2D(st_coordinates(charging_stationsB), bandwidth=c(500,500), gridsize=gridsize, range.x=range_x)
+```
+
+
+```{r}
+st_crs(charging_stationsB)
+```
+
+Since *bkde2D* returns a matrix we need to convert it to a raster:
+
+```{r}
+kdeRas <- raster(list(x=kdeMat$x1,y=kdeMat$x2,z=kdeMat$fhat), crs=CRS('+init=EPSG:25833') )
+```
+
+```{r}
+kdeRas_scaled <- kdeRas*xres(kdeRas)*yres(kdeRas)* nrow(charging_stationsB)
+cellStats(kdeRas_scaled$layer, stat=sum )
+kdeRas_scaledContour <- rasterToContour(kdeRas_scaled)  %>%   st_as_sf()
+```
+
+
+```{r}
+tmap_mode("view")
+tm_shape(kdeRas_scaled) + tm_raster(col="layer", alpha = .5, palette ="-plasma", title = "Kernel density estimate", style = "kmeans" ) + tm_shape(charging_stationsB) + tm_dots(alpha=.5) + tm_shape(kdeRas_scaledContour) + tm_lines() + tm_text(text="level", col="white", shadow=TRUE, along.lines=TRUE)
+```
+
+## How far are the stations away from each other?
+
+We use a for loop to calculate the distance to the clostet charging station in the data set. Therefore, we loop over all points and calculate the distance between the point i and all points including itself. This rather brute force approache returns the whole distance matrix which when can be used to calculate differences.
+
+
+```{r}
+n <- nrow(charging_stationsB)
+distMat <- matrix(data=0, nrow=n, ncol=n)
+for(i in seq_len(n))
+{
+  allDists <- st_distance(charging_stationsB, charging_stationsB[i,])
+  distMat[i,] <- allDists
+  
+}
+```
+
+In many cases several charging stations are at the same point, rendering a distance of zero.
+
+```{r}
+getSecondSmallest <- function(x, pos=2)
+{
+   sort(x)[pos]
+}
+dist2Shortest <- apply(distMat, MARGI=1, FUN= getSecondSmallest, pos=2)
+summary(dist2Shortest)
+```
+
+We can force the analysis to deliver us the shortest distance to a neighbor not at the same location. Therefore, we:
+  * sort values
+  * get the indices of all values larger than zero
+  * get the first element of the indices that is larger then zero
+
+```{r}
+getSecondSmallestNotAtSame <- function(x, pos=1)
+{
+   sortedValues <- sort(x)
+   idx <- which(sortedValues > 0)
+   return(sortedValues[idx][pos])
+}
+dist2ShortestNotAtSame <- apply(distMat, MARGI=1, FUN= getSecondSmallestNotAtSame)
+summary(dist2ShortestNotAtSame)
+```
+
+Or we could get the average distance to the closest ten charging stations
+
+
+```{r}
+getMeanDistToClostest <- function(x, n=10)
+{
+   sortedValues <- sort(x)
+   return(mean(sortedValues[1:n+1]))
+}
+distMean10 <- apply(distMat, MARGI=1, FUN= getMeanDistToClostest)
+summary(distMean10)
+```
+
+If we want to show distances in the map we can simply add the vectors to the simple features object and use tmap afterwards.
+
+```{r}
+charging_stationsB['meanDist10'] <- distMean10
+```
+
+```{r}
+osm_b <- read_osm(charging_stationsB, ext=1.1)
+```
+
+
+```{r}
+tmap_mode("plot")
+tm_shape(osm_b) + tm_rgb() + tm_shape(charging_stationsB) + tm_dots(size="meanDist10", legend.size.show = TRUE, title.size = "Mean distance to closest 10 stations" ) + tm_basemap(server= "OpenStreetMap.DE") + tm_layout(legend.outside=TRUE) + tm_scale_bar()
+```
+
+We see that distances are (not unexpectedly increaing from the city center).
+
+A convenient and fast imlementations is *kNNdist* from the *dbscan* package:
+
+```{r}
+nn4Mat <- kNNdist(st_coordinates(charging_stationsB), k=4, all=TRUE)
+head(nn4Mat)
+```
+
+It returns the distance matrix for the *k* nearest neighbors.
+
+
+## Identify spatial clusters using dbscan
+
+DBSCAN estimates the density around each data point by counting the number of points in a user-specified eps-neighborhood and applies a used-specified minPts thresholds to identify core, border and noise points. In a second step, core points are joined into a cluster if they are density-reachable (i.e., there is a chain of core points where one falls inside the eps-neighborhood of the next). Finally, border points are assigned to clusters. The algorithm only needs parameters eps and minPts.
+
+
+```{r}
+db_B <- dbscan(st_coordinates(charging_stationsB), eps = 650, minPts = 7)
+print(db_B)
+```
+
+```{r}
+charging_stationsB['dbCluster'] <- db_B$cluster
+nClust <- length(unique(db_B$cluster))
+```
+
+Define our own palette based on the *Set3* palette but uses white for the noise points.
+
+```{r}
+mypal <- RColorBrewer::brewer.pal(nClust-1, "Set3")
+mypal <- c("#FFFFFF", mypal)
+```
+
+
+
+```{r}
+tmap_mode("view")
+tm_shape(charging_stationsB) + 
+  tm_dots(col = "dbCluster", size=0.25, alpha=.5, palette=mypal, n=nClust) +
+  tm_basemap(server= c("OpenStreetMap.DE", "Esri.WorldImagery")) + 
+  tm_scale_bar()
+```
+
+

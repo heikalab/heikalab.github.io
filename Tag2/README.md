@@ -15,6 +15,9 @@ Bitte installiert auch die benötigten R-packages. Am einfachsten könnte ihr fo
 
 Die Scripte gehen davon aus, dass es einen Ordner (z.B. Tag2/) gibt, in dem sich alle Scripte des Tages befinden sowie ein Unterordner *data*, in dem sich alle Daten befinden. Hierbei müssen die Zip-Archive mit den Shapefiles entpackt sein.
 
+## Folien
+* <a href="spatial_analysis.pdf">Spatial spatial_analysis</a>
+
 ## Daten
 
 * <a href="https://raw.githubusercontent.com/heikalab/urbandatascience/main/Tag2/data/HH.gpkg">Geopackage mit den Ladestationen für Hamburg</a>

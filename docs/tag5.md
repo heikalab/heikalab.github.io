@@ -21,11 +21,16 @@ Dr. Sven Lautenbach (HeiGIT)
 ## Programm
 
 * 9:00-10:00 Vortrag und Übung Dr. Julian Bruns
-* 10:00-10:45 Vortrag OSM und Anwendungen im Bereich Mobilität (Sven Lautenbach)
-* 11:00-11:30 Intro Jupyter NB OSMnx, ggf. ohsome (Sven Lautenbach)
-* 11:30-12:30 Übung
-* 14:00-14:30 Vortrag Routing und ORS (Sven Lautenbach)
-* 14:30-15:00 Jupyter NB ORS - Directions (Sven Lautenbach)
-* 15:15-16:15 Übung
-* 16:15-16:30 2. Jupyter NB ORS – isochronen, Erreichbarkeiten von z.B. Einzelhandelsstandorten (Sven Lautenbach)
-* 16:30-17:30 Übung
+* 10:00-10:45 Vortrag OSM, Datenqualität und Anwendungen (Sven Lautenbach)
+* 10:45-11:00 Pause
+* 11:00-11:30 Lab R/Rstudio: OSM Daten über ohsome, Analysen Bereich Gesundheit (Sven Lautenbach)
+* 11:30-12:00 Übung
+* 12:00-12:30 Lab R/Rstudio: Intrinsische Datenqualität OSM - Analysen auf Grundlage von ohsome
+* 12:30-14:00 Mittagspause
+* 14:00-14:30 Übung
+* 14:30-15:00 Vortrag Routing und OpenRouteService (Sven Lautenbach)
+* 15:00-15:15 Pause
+* 15:15-15:45 Lab R/Rstudio: ORS - Erreichbarkeiten von Gesundheitsstandorten über Isochronen (Sven Lautenbach)
+* 15:45-16:15 Übung
+* 16:30-17:00 Lab R/Rstudio: ORS Directions (Sven Lautenbach)
+* 17:00-17:15 Übung

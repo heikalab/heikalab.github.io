@@ -1,0 +1,512 @@
+---
+title: "Urban Data Science Lab - day 5 - intrinsic data quality"
+author: "Sven Lautenbach"
+date: "10/21/2020"
+output: 
+  html_document: 
+    toc: yes
+    highlight: haddock
+    number_sections: yes
+    theme: sandstone
+    df_print: tibble
+---
+
+```{r setup, include=FALSE}
+require(knitr)
+ws <-"/home/slautenb/Documents/lehre/HD/ws_2020_21/heikaLab/R4UrbanDataLab_2020/" 
+require(knitr)
+opts_chunk$set(echo = TRUE)
+opts_knit$set(root.dir = ws)
+# handling of spatial data
+require(sf)
+#require(tmap) # map creation
+require(RCurl)
+require(geojsonio)
+require(tidyverse)
+require(ggpubr) # for the arangement of multiple ggplot objects
+#require(raster)
+```
+
+```{r}
+getOsomeStat <- function(uri, valueFieldName="value", ...)
+{
+  results <- postForm(uri, binary=FALSE, .encoding = "utf-8", ...)
+  
+  #browser()
+  resultList <- RJSONIO::fromJSON(results, simplify = TRUE)
+  resultsDf <- data.frame(do.call("rbind", (resultList$result)))
+  # make sure the right data types are used
+  # for users we have  fromTimestamp  and  toTimestamp fields, not timestampe
+  if(length(grep(x=names(resultsDf), pattern = "timestamp"))> 0)
+  {
+    resultsDf$timestamp <- parse_datetime( as.character(resultsDf$timestamp))  
+  }
+  if(length(grep(x=names(resultsDf), pattern = "fromTimestamp"))> 0)
+  {
+    resultsDf$fromTimestamp <- parse_datetime( as.character(resultsDf$fromTimestamp))  
+  }
+  if(length(grep(x=names(resultsDf), pattern = "toTimestamp"))> 0)
+  {
+    resultsDf$toTimestamp <- parse_datetime( as.character(resultsDf$toTimestamp))  
+  }
+  # rename value field
+  resultsDf$value <- as.numeric(as.character(resultsDf$value))
+  idxValueField <- which(names(resultsDf)=="value")
+  names(resultsDf)[idxValueField] <- valueFieldName
+  
+  
+  return(resultsDf)
+}
+```
+
+# Intrinsic data quality for Lima
+
+## Highway
+
+### Get time seires of contributions
+
+To estimate how complete the OSM data are we could look at the historic development of OSM contributions.
+
+```{r}
+adminLimaCallao <- st_read(dsn="data_day5/lima.gpkg", layer="limaCallao")
+limaBbox <- st_bbox(adminLimaCallao)
+limaBboxStr <- paste(limaBbox, collapse = ", ")
+```
+
+For highways we query the development of road length over time
+
+```{r}
+theTime <- "2008-01-01/2020-05-01/P1M"
+theTimeUser <- "2007-12-01/2020-05-01/P1M"
+```
+
+```{r, cache=TRUE}
+resHighwayTotal <- getOsomeStat(uri = "https://api.ohsome.org/v1/elements/length/", bboxes = limaBboxStr, filter = "highway=* and type:way", time = theTime, valueFieldName = "highway_length_total")
+```
+
+
+Lets get also separate information for primary, secundary and tertiary roads as well as for residential roads
+
+```{r, cache=TRUE}
+resHighwayPrimary <- getOsomeStat(uri = "https://api.ohsome.org/v1/elements/length/", bboxes = limaBboxStr, filter = "highway=primary and type:way", time = theTime, valueFieldName = "highwayPrimary_length_total")
+
+resHighwaySecondary <- getOsomeStat(uri = "https://api.ohsome.org/v1/elements/length/", bboxes = limaBboxStr, filter = "highway=secondary and type:way", time = theTime, valueFieldName = "highwaySecondary_length_total")
+
+resHighwayTertiary <- getOsomeStat(uri = "https://api.ohsome.org/v1/elements/length/", bboxes = limaBboxStr, filter = "highway=tertiary and type:way", time = theTime, valueFieldName = "highwayTertiary_length_total")
+
+resHighwayResidential <- getOsomeStat(uri = "https://api.ohsome.org/v1/elements/length/", bboxes = limaBboxStr, filter = "highway=residential and type:way", time = theTime, valueFieldName = "highwayResidential_length_total")
+```
+
+Combine the data.frames - they all have the same order since time is exactly the same:
+
+```{r}
+resHighwayTs <- cbind(resHighwayTotal,
+                      resHighwayPrimary$highwayPrimary_length_total,
+             resHighwaySecondary$highwaySecondary_length_total,
+             resHighwayTertiary$highwayTertiary_length_total,
+             resHighwayResidential$highwayResidential_length_total)
+names(resHighwayTs) <- c("timestamp", "total_highway_length", "primary_highway_length", "secondary_highway_length", "tertiary_highway_length", "residential_highway_length")
+```
+
+For routing application it is important that the road network is relative complete. Therefore, we will be adding up the four main road types (excluding motorways and trunks for right now):
+
+```{r}
+resHighwayTs$roadLength4cls <- resHighwayTs %>% select(3:6) %>% rowSums(na.rm=TRUE) 
+```
+
+### Plot highway contributions
+
+First we are going to change the table format from the wide format to the long format since this simplyfies handling in ggplot dramatically.
+
+```{r}
+resHighwayTs_long <- pivot_longer(resHighwayTs, 2:7, names_to = "type", values_to = "length" )
+resHighwayTs_long$length <- resHighwayTs_long$length / 1000 # konvert to km
+```
+
+Reorder the factor levels for nicer plotting
+
+```{r}
+resHighwayTs_long$type <- factor(resHighwayTs_long$type, levels = c("total_highway_length", "primary_highway_length", "secondary_highway_length", "tertiary_highway_length", "residential_highway_length", "roadLength4cls"))
+```
+
+
+```{r}
+ggplot(resHighwayTs_long, mapping=aes(x=timestamp, y=length)) + geom_area() + facet_wrap(facets = vars(type), scales="free_y") + xlab("") + ylab("Length [km]") + labs(title = "OSM contributions Lima", subtitle = "Highway")
+```
+We see that the growth of total length of the road network still continues to increase. However, the slope has decreased - the process might not have levelled of but it might have already started to level of. We also observe a strong jump of total highway length at around 2012 which presumably was caused by an import.
+
+We also observe that inbetween the road length for tertiary highways dropped drastically and that primary highways decreased between 2012 and 2015. Potentially these might be do to a reclassification of highways. This might become clearer if the stack the different components.
+
+
+```{r}
+resHighwayTs_long %>% 
+  filter(type != "total_highway_length") %>%
+  ggplot( mapping=aes(x=timestamp, y=length, fill=type)) +
+  geom_area(position="stack", show.legend = TRUE, alpha=.7) + 
+  scale_fill_discrete(name = "Highway class",
+                      labels = c("Primary", "Secondary", "Tertiary", "Residential")) +
+  xlab("") + ylab("Length [km]") + 
+  labs(title = "OSM contributions Lima", subtitle = "Highway") 
+```
+
+The potential import in 2012 effect mainly residential roads and in 2013 we see another strong increase in the length of residential highways. The drop of tertiary highways in 2014 seems to be a reclassification towards secondary highways.
+
+
+### Fit saturation curve for total highway length
+
+#### Logistic curve
+
+We could try to fit a saturation curve (logistic curve in this example) to the data to estimat how well it fits the data.
+
+We use a parametrization of the logistic function for which a selt-starter functions exists:
+
+$y = \frac{Asym} {(1+exp^{\frac{x_{mid} - x}{scal})}}$
+
+  * Asym is the asymptotic value the function converges against
+  * $x_{mid} is the x-value (here time, in seconds since 01.01.1970) at which the curve has its turing point (half saturation point)
+  * scal is inversely related to the slope of the curve
+  
+For the fitting of non-linear functions we need to provide suitable start values for all parameters to be estimated. Otherwise the function might not converge. For some commonly used function R provides self-starter functions, that estimate suitable start values from the data.
+
+```{r}
+g <- nls(length ~ SSlogis(input=as.numeric(timestamp), Asym, xmid, scal), data = resHighwayTs_long, subset= type == "total_highway_length")
+summary(g)
+```
+
+```{r}
+resHighwayTs_long %>% 
+  filter(type == "total_highway_length") %>%
+  ggplot( mapping=aes(x=timestamp, y=length, fill=type)) +
+  geom_area() + 
+  xlab("") + ylab("Length [km]") + 
+  labs(title = "OSM contributions Lima", subtitle = "Highway") +
+geom_smooth( method="nls", formula= y~ SSlogis(input=x, Asym, xmid, scal) , se=FALSE, col="black", lty=2, size=1)
+```
+
+The single saturation curve does not fit to well. A double logistic curve presumably fits the data better.
+
+#### Double logistic curve
+
+The double logistic curve is the sum of two logist curves therebey the second curve is zero until a threshold. It can be expressed as follows:
+
+
+$y= \frac{a_1} {(1+ exp^{(k_1*( b_1- x)))}} + \frac{(a_2-a_1)} {(1+ exp^{(k_2*( b_2- x)))}} $
+
+  - $a_1$ represents the saturation value for the first (the y value at which the first logistic curve saturates)
+  - $a_1$ + $a_2$ is the saturation value at which the combined curve saturates. $a_2$ is the saturation of the second curve if the values of the second curve would be substracted
+  - $b_1$ represents the date (in internal representation which is seconds since 01.01.1970) at which the first curve has reached its turning point
+  - $b_2$ represents the date at which the second curve has reached its turning point
+  - $k_1$ and $k_2$ describe the slope of the first and the second curve. 
+
+For the double logistic curve we have no self-starter function. Which implies that we have to supply start values for the function.
+
+```{r}
+doubleLog <- function(x, a1, a2, b1, b2, k1, k2)
+{
+  y <- a1 / (1+ exp(k1*( b1- x))) + (a2-a1) / (1+ exp(k2*( b2- x)))
+  res <- data.frame(y, x=as.Date.POSIXct(x))
+
+  return(res)
+}
+doubleLog(x=1525125600, a1= 6000, a2=2500, k1=10^6, k2=10^6, b1=as.numeric(as.POSIXct("2015-01-01")), b2= as.numeric(as.POSIXct("2018-05-01")))
+```
+Lets plot the function for different parameters. First varying a1 and a2:
+
+```{r}
+xstart <- as.numeric(as.POSIXct("2008-01-01"))
+xend <- as.numeric(as.POSIXct("2019-12-01"))
+
+params <- crossing(a1 = c(4000, 10000), a2 = c(25000, 20000), k1=10^-8, k2=10^-8, b1=as.numeric(as.POSIXct("2015-01-01")), b2= as.numeric(as.POSIXct("2018-05-01")))
+
+params %>% 
+  dplyr::mutate(res=purrr::pmap(., .f = doubleLog,  x = seq(xstart, xend, by=10^4))) %>% 
+  tidyr::unnest(cols=c(res)) %>% 
+  ggplot(aes(x=x, y=y, colour=factor(a1)))+
+    facet_wrap(~a2, ncol=2) + geom_line() 
+
+```
+
+Changing the slope coefficients:
+
+```{r}
+params <- crossing(a1 = 4000, a2 = 25000, k1=c((1:3)*10^-8), k2=(1:3)*10^-8, b1=as.numeric(as.POSIXct("2015-01-01")), b2= as.numeric(as.POSIXct("2018-05-01")))
+
+params %>% 
+  dplyr::mutate(res=purrr::pmap(., .f = doubleLog,  x = seq(xstart, xend, by=10^4))) %>% 
+  tidyr::unnest(cols=c(res)) %>% 
+  ggplot(aes(x=x, y=y, colour=factor(k1)))+
+    facet_wrap(~k2, ncol=2) + geom_line()
+```
+
+Changing the half-saturation coefficients. 
+For a niver labelling I define a labeller function that converts the number of seconds into a date string. The labbeler is called for each facet and should put the returned labels in the facet title.
+
+```{r}
+convStr2Date <- function(str)
+{ # adding a day is necessary to get the right Date, not interley clear why...
+  return(as.character(as.Date.POSIXct(as.numeric(as.character(str))+3600*24)))
+}
+
+label_time <- function(timeLabels, multi_line = TRUE){
+  #browser()
+  value <- label_value(timeLabels, multi_line = multi_line)
+  labels <- lapply(value, convStr2Date)
+  if (!multi_line) {
+        labels <- collapse_labels_lines(labels)
+  }
+   return(labels)  
+}
+
+```
+
+
+```{r}
+params <- crossing(a1 = 4000, a2 = 25000, k1=3*10^-8, k2=3*10^-8, b1=as.numeric(as.POSIXct(c("2013-01-01", "2015-01-01"))), b2= as.numeric(as.POSIXct(c("2016-05-01","2018-05-01"))))
+
+theDf <- params %>% 
+  dplyr::mutate(res=purrr::pmap(., .f = doubleLog,  x = seq(xstart, xend, by=10^4))) %>% 
+  tidyr::unnest(cols=c(res)) 
+
+theDf %>% ggplot(aes(x=x, y=y, colour=factor(b1)))+
+    facet_wrap(~b2 , ncol=2, labeller = labeller(b2 = label_time ) ) +
+  geom_line() +
+  scale_color_discrete(name = "b1",
+                      labels = convStr2Date(unique(theDf$b1)))
+```
+
+Now we fit the non-linear function using *nls* providing a set of start values for the 6 parameters. If these values are not well chosen the function will not converge.
+
+```{r}
+g <- nls(length ~  a1 / (1+ exp(k1*( b1- as.numeric(timestamp)))) + (a2-a1) / (1+ exp(k2*( b2- as.numeric(timestamp)))), 
+         data = resHighwayTs_long, subset= type == "total_highway_length",
+         start=c(a1=6000, a2= 25000, k1=10^-6, k2=10^-6, b1=as.numeric(as.POSIXct("2015-01-01")), b2= as.numeric(as.POSIXct("2018-05-01")))) 
+summary(g)
+```
+
+```{r}
+idx_a1 <- which(names(coef(g))=="a1")
+idx_a2 <- which(names(coef(g))=="a2")
+saturationCoef <- coef(g)[idx_a1] + coef(g)[idx_a2]
+
+maxVal <- resHighwayTs_long %>% 
+  filter(type == "total_highway_length") %>% select(length) %>% max()
+```
+
+
+The fitted saturation curve estimates the maximum at $a_1 + a_2$ = `r saturationCoef` that is `r signif(maxVal /saturationCoef,4)  * 100`% of the current value: 
+  
+
+Which dates have been selected?  
+```{r}
+idx_b1 <- which(names(coef(g))=="b1")
+as.Date.POSIXct(coef(g)[idx_b1])
+```
+  
+```{r}
+idx_b2 <- which(names(coef(g))=="b2")
+as.Date.POSIXct(coef(g)[idx_b2])
+```
+
+
+
+
+
+```{r}
+resHighwayTs_long %>% 
+  filter(type == "total_highway_length") %>%
+  ggplot( mapping=aes(x=timestamp, y=length, fill=type)) +
+  geom_area() + 
+  xlab("") + ylab("Length [km]") + 
+  labs(title = "OSM contributions Lima", subtitle = "Highway") +
+geom_smooth( method="nls", formula= y~ a1 / (1+ exp(k1*( b1- x))) + (a2-a1) / (1+ exp(k2*( b2- x))), method.args= list(start=c(a1=6000, a2= 25000, k1=10^-6, k2=10^-6, b1=as.numeric(as.POSIXct("2015-01-01")), b2= as.numeric(as.POSIXct("2018-05-01"))) )  , se=FALSE, col="black", lty=2, show.legend=FALSE)
+```
+
+In other words: the road network is presumably not yet complete. The primary roads seems also incomplete.
+
+###Fit saturation curve for primary highway length
+
+```{r}
+resHighwayTs_long %>% 
+  filter(type == "primary_highway_length") %>%
+  ggplot( mapping=aes(x=timestamp, y=length, fill=type)) +
+  geom_area() + 
+  xlab("") + ylab("Length [km]") + 
+  labs(title = "OSM contributions Lima", subtitle = "Primary highway") +
+geom_smooth( method="gam")
+```
+
+The time series can neither be fitted by a logistic nor a double logistic curve.
+
+If we just look at the time after 2014 we are able to fit a logistic curve to the data that were created since when. This would indicate a relatively saturated situation. However, it is questionable if no further bumps would occur. 
+
+```{r}
+resHighwayTs_long %>% 
+  filter(type == "primary_highway_length" & timestamp > as.Date("2014-01-01")) %>%
+  ggplot( mapping=aes(x=timestamp, y=length-500, fill=type)) +
+  geom_area() + 
+  xlab("") + ylab("Length [km]") + 
+  labs(title = "OSM contributions Lima", subtitle = "Primary highway") +
+geom_smooth(method="nls", formula= y~ SSlogis(input=x, Asym, xmid, scal) , se=FALSE, col="black", lty=2, size=1)
+```
+
+If we look (not shown here) at an animation that shows the highway development for the region we see that the highway network seems relatively dense - but this does not imply that roads could not be wrongly labelled.
+
+### Fit saturation for combined road network
+
+
+
+```{r}
+resHighwayTs_long %>% 
+  filter(type == "roadLength4cls") %>%
+  ggplot( mapping=aes(x=timestamp, y=length, fill=type)) +
+  geom_area() + 
+  xlab("") + ylab("Length [km]") + 
+  labs(title = "OSM contributions Lima", subtitle = "Primary, secondary, tertiary and residential highways") +
+geom_smooth( method="nls", formula= y~ SSlogis(input=x, Asym, xmid, scal) , se=FALSE, col="black", lty=2, size=1)
+```
+
+```{r}
+g <- nls(length ~  a1 / (1+ exp(k1*( b1- as.numeric(timestamp)))) + (a2-a1) / (1+ exp(k2*( b2- as.numeric(timestamp)))), 
+         data = resHighwayTs_long, subset= type == "roadLength4cls",
+         start=c(a1=6000, a2= 25000, k1=10^-6, k2=10^-6, b1=as.numeric(as.POSIXct("2015-01-01")), b2= as.numeric(as.POSIXct("2018-07-01")))) 
+summary(g)
+```
+Fitting the double logistic regresson returns a non-significant coefficient for $k_1$, a negative saturation value for $a_1$ and values for $b_1$ and $b_2$ that indicate that the paramters for the second curve describe the first period. 
+If we change parameter $b_2$ a bit we get different model parameters or a model that not converges. This underlines how sensitive non-linear model could be with respect to small changes to starting values.
+
+```{r}
+g <- nls(length ~  a1 / (1+ exp(k1*( b1- as.numeric(timestamp)))) + (a2-a1) / (1+ exp(k2*( b2- as.numeric(timestamp)))), 
+         data = resHighwayTs_long, subset= type == "roadLength4cls",
+         start=c(a1=6000, a2= 25000, k1=10^-6, k2=10^-6, b1=as.numeric(as.POSIXct("2015-01-01")), b2= as.numeric(as.POSIXct("2018-05-01")))) 
+summary(g)
+```
+
+Plotting the resultng regression line
+
+```{r}
+resHighwayTs_long %>% 
+  filter(type == "roadLength4cls") %>%
+  ggplot( mapping=aes(x=timestamp, y=length, fill=type)) +
+  geom_area() + 
+  xlab("") + ylab("Length [km]") + 
+  labs(title = "OSM contributions Lima", subtitle = "Primary, secondary, tertiary and residential highways") +
+geom_smooth( method="nls", formula= y~ a1 / (1+ exp(k1*( b1- x))) + (a2-a1) / (1+ exp(k2*( b2- x))), method.args= list(start=c(a1=6000, a2= 25000, k1=10^-6, k2=10^-6, b1=as.numeric(as.POSIXct("2015-01-01")), b2= as.numeric(as.POSIXct("2018-07-01"))) )  , se=FALSE, col="black", lty=2, show.legend=FALSE) +
+geom_smooth( method="nls", formula= y~ a1 / (1+ exp(k1*( b1- x))) + (a2-a1) / (1+ exp(k2*( b2- x))), method.args= list(start=c(a1=6000, a2= 25000, k1=10^-6, k2=10^-6, b1=as.numeric(as.POSIXct("2015-01-01")), b2= as.numeric(as.POSIXct("2018-05-01"))) )  , se=FALSE, col="black", lty=3, show.legend=FALSE)
+```
+
+For the combination of the four road classes we could assume that the road network is relatively complete.
+
+# Healthsites
+
+Here we use the count endpoint since we are interested in the number of healthsites - length would not make much sense here.
+
+## Get contributions from ohsome
+
+```{r, cache=TRUE}
+resHealthSitesTotal <- getOsomeStat(uri = "https://api.ohsome.org/v1/elements/count/", bboxes = limaBboxStr, filter = "amenity in (hospital, clinics, doctors, pharmacy) or healthcare in (centre, clinic, doctor, community_health_worker, hospital)", time = theTime, valueFieldName = "countHealthSitesTotal")
+
+resHospitals <- getOsomeStat(uri = "https://api.ohsome.org/v1/elements/count/", bboxes = limaBboxStr, filter = "amenity=hospital", time = theTime, valueFieldName = "countHospitals")
+
+resClinics <- getOsomeStat(uri = "https://api.ohsome.org/v1/elements/count/", bboxes = limaBboxStr, filter = "amenity=clinic", time = theTime, valueFieldName = "countClinics")
+
+resDoctors <- getOsomeStat(uri = "https://api.ohsome.org/v1/elements/count/", bboxes = limaBboxStr, filter = "amenity=doctors", time = theTime, valueFieldName = "countDoctors")
+
+resPharmacies <- getOsomeStat(uri = "https://api.ohsome.org/v1/elements/count/", bboxes = limaBboxStr, filter = "amenity=pharmacy", time = theTime, valueFieldName = "countPharmacies")
+```
+
+Combine the data.frames - they all have the same order since time is exactly the same:
+
+```{r}
+resHealthTs <- cbind(resHealthSitesTotal,
+                      resHospitals$countHospitals,
+             resClinics$countClinics,
+             resDoctors$countDoctors,
+             resPharmacies$countPharmacies)
+names(resHealthTs) <- c("timestamp", "Health_sites_total", "Hospital", "Clinic", "Doctors", "Pharmacy")
+```
+
+
+### Plot highway contributions
+
+First we are going to change the table format from the wide format to the long format since this simplyfies handling in ggplot dramatically.
+
+```{r}
+resHealthTs_long <- pivot_longer(resHealthTs, 2:6, names_to = "type", values_to = "count" )
+resHealthTs_long$count <- resHealthTs_long$count
+```
+
+Reorder the factor levels for nicer plotting
+
+```{r}
+resHealthTs_long$type <- factor(resHealthTs_long$type, levels = c("Health_sites_total", "Hospital", "Clinic", "Doctors", "Pharmacy"))
+summary(resHealthTs_long)
+```
+
+
+```{r}
+ggplot(resHealthTs_long, mapping=aes(x=timestamp, y=count)) + geom_area() + facet_wrap(facets = vars(type), scales="free_y") + xlab("") + ylab("Objects") + labs(title = "OSM contributions Lima", subtitle = "Healthsites")
+```
+Similar to hoghways a part of the contributions probably originates from an import that affectes all classes but most dominately pharmacies. The drop in hospitals might originate from a quality controll operation that resulted in an reclassification of hospitals to clinics or doctors.
+
+```{r}
+resHealthTs_long %>% 
+  filter(type != "Health_sites_total") %>%
+  ggplot( mapping=aes(x=timestamp, y=count, fill=type)) +
+  geom_area(position="stack", show.legend = TRUE, alpha=.7) + 
+  scale_fill_discrete(name = "Healthsites class",
+                      labels = c("Hospital", "Clinic", "Doctors", "Pharmacy")) +
+  xlab("") + ylab("Objects") + 
+  labs(title = "OSM contributions Lima", subtitle = "Healthsites") 
+```
+
+
+## Number of active users
+
+The number of active users is an important indicator to judge on saturation curves. A saturation in contributions might have been reached because: 
+  * everything of that specific category has been already mapped
+  * there are no mappers around anymore
+  
+If a sufficient number of mappers is around one might take this as an indication that saturation really implies high level of completeness.
+
+We can use the ohmsome API to query the number of active users as well. The need a different endpoint (c.f. https://docs.ohsome.org/ohsome-api/v1/endpoints.html#users-aggregation-endpoints) and we need to be aware that the data returned are different: we get ther number of users active (at least one edit) between a start and an end (a time period).
+
+```{r, cache=TRUE}
+resActiveUsers <- getOsomeStat(uri = "https://api.ohsome.org/v1/users/count/", bboxes = limaBboxStr,  time = theTimeUser, valueFieldName = "countUsers")
+```
+
+```{r}
+head(resActiveUsers)
+```
+
+```{r, fig.height=7}
+p1 <- resActiveUsers %>% 
+  ggplot(mapping=aes(x=toTimestamp, y=countUsers)) +
+  geom_area(alpha=.7) + 
+  xlab("") + ylab("Active users") + 
+  labs(title = "OSM active users Lima", subtitle = "All OSM users") 
+
+p2 <- resHealthTs_long %>% 
+  filter(type == "Health_sites_total") %>%
+  ggplot( mapping=aes(x=timestamp, y=count)) +
+  geom_area(position="stack", show.legend = FALSE, alpha=.7) + 
+  xlab("") + ylab("Count objects") + 
+  labs(title = "OSM contributions Lima", subtitle = "Healthsites") 
+
+p3 <- resHighwayTs_long %>% 
+  filter(type == "total_highway_length") %>%
+  ggplot( mapping=aes(x=timestamp, y=length)) +
+  geom_area(position="stack", show.legend = FALSE, alpha=.7) + 
+  xlab("") + ylab("Length [km]") + 
+  labs(title = "OSM contributions Lima", subtitle = "Highways") 
+
+ggarrange(p1, p2, p3, ncol=1)
+```
+
+What we can spot is that:
+  - the jumps in contributions for health sites and for highways don't co-occur at the same time
+  - the jumps in constributions are not reflected by an increase in user activity - hinting even more for import events
+  - the strong peak in user activity has not led to a remarkable increase in highway or health sites contributions
+
+# Exercise
+
+Redo the analysis for building=*. 

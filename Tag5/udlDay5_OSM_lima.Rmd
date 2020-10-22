@@ -1,0 +1,202 @@
+---
+title: "Urban Data Science Lab - day 5 - OSM Lima"
+author: "Sven Lautenbach"
+date: "10/21/2020"
+output: 
+  html_document: 
+    toc: yes
+    highlight: haddock
+    number_sections: yes
+    theme: sandstone
+---
+
+```{r setup, include=FALSE}
+require(knitr)
+ws <-"/home/slautenb/Documents/lehre/HD/ws_2020_21/heikaLab/R4UrbanDataLab_2020/" 
+require(knitr)
+opts_chunk$set(echo = TRUE)
+opts_knit$set(root.dir = ws)
+# handling of spatial data
+require(sf)
+require(tmap) # map creation
+require(RCurl)
+require(geojsonio)
+require(tidyverse)
+require(raster)
+```
+
+# Get OSM data
+
+## Lima administrative boundary
+
+OSM boundaries were downloaded via https://osm-boundaries.com/
+
+```{r}
+adminLima <- st_read(dsn="data_day5/lima.gpkg", layer="limaAdmin")
+limaBbox <- st_bbox(adminLima)
+limaBboxStr <- paste(limaBbox, collapse = ", ")
+```
+
+
+```{r}
+tm_shape(adminLima) + tm_polygons(col="admin_level")
+```
+
+Since the airport is missing it might be useful, to combine the administartive boundary from Lima and Callao at least for some analysis:
+
+```{r}
+adminLimaCallao <- st_read(dsn="data_day5/lima.gpkg", layer="limaCallao")
+limaBbox <- st_bbox(adminLimaCallao)
+limaBboxStr <- paste(limaBbox, collapse = ", ")
+```
+
+```{r}
+tm_shape(adminLimaCallao) + tm_polygons(col="name")
+```
+
+## Highways for Lima
+
+We will be using the ohsome api to query a number of features. We specify the following parameters:
+  - bounding box
+  - time in the YYYY-MM-DD format (I chose a relative new time stamp - the planet file is frequently updated but always a bit behind given the heavy lifitng involved)
+  - a filter that defines which key-value combinations should be downloaded
+  - with properties="tags" I specify that I would like to get the tag (to be able to distinguish the differt road classes)
+  - using clipGeometry=TRUE geometries are clipped at the bounding box. Otherwise longer roads might continue outside the bounding box region
+  
+For information on the definition of the different OSM keys and values refer to the OSM Wiki. For highway for example see: https://wiki.openstreetmap.org/wiki/Key:highway
+
+  
+```{r}
+limaHighway_result <- RCurl::postForm("https://api.ohsome.org/v1/elements/geometry", bboxes = limaBboxStr, filter = "highway in (motorway, trunk, primary, secondary, tertiary) and type:way", time = "2020-05-01",  binary=FALSE, properties="tags", clipGeometry =TRUE)
+
+content <- geojsonio::as.json(limaHighway_result)
+highwayLima <- geojsonio::geojson_sf(content)
+```
+
+Create an additional argument that will be used for plotting:
+
+```{r}
+highwayLima <- highwayLima %>% 
+    mutate( cls4map = case_when(
+                highway == "trunk" | highway == "motorway" ~  10,
+                highway == "primary"        ~   5,
+                highway == "secondary"        ~   4,
+                highway == "tertiary"        ~   3
+))
+```
+
+## Health sites
+
+Healthsites in Lima. Healthsites might be represented by nodes, ways or relationship. Therefore, I use a different end point (*centroid* instead of *geometry*) that returns only the centroid of the feature. For relations that involve multiple buildings belonging to the same hospital that could lead to a point outside of the geometries.
+
+```{r}
+limaHealth_result <- RCurl::postForm("https://api.ohsome.org/v1/elements/centroid", bboxes = limaBboxStr, filter = "amenity in (hospital, clinics, doctors, pharmacy) or healthcare in (centre, clinic, doctor, community_health_worker, hospital)", time = "2020-05-01",  binary=FALSE, properties="tags")
+
+content <- geojsonio::as.json(limaHealth_result)
+healthsitesLima <- geojsonio::geojson_sf(content)
+```
+
+This returned `r nrow(healthsitesLima)` healthsites.
+
+The different types are distributed as follows (using the two keys amenity and healthcare which can be both used in OSM).
+
+```{r}
+xtabs(~amenity + healthcare, data=healthsitesLima, addNA = TRUE)
+```
+
+```{r}
+tmap_mode("view")
+tm_shape(highwayLima) + tm_lines(col= "highway", palette = "Set1") + tm_basemap("OpenStreetMap.DE") + tm_shape(healthsitesLima) + tm_dots(col="amenity", legend.show = TRUE, palette= "Accent")
+```
+
+```{r}
+tmap_mode("view")
+tm_shape(highwayLima) + tm_lines(col= "highway", palette = c("blue", "red", "orange", "yellow", "blue" ), lwd= "cls4map", legend.lwd.show = FALSE ) +  tm_shape(healthsitesLima %>% filter(amenity == "hospital" | amenity=="clinic")) + tm_dots(col="amenity", legend.show = TRUE, palette= c("black", "green"))
+```
+
+# Distance calculation
+
+## Distance to nearest hospital
+
+First we creat an empty raster that is used as a template for the distance rasters (definining the extent, the cell size and the CRS of the raster).
+
+```{r}
+limaRas <- raster(xmn= limaBbox[1], xmx=limaBbox[3], ymn= limaBbox[2], ymx= limaBbox[4], res=0.005)
+```
+
+*distanceFromPoints* calculates the distance to the closest point of the set of points provided. The coordinate system is WGS84 - *distanceFromPoints* calculates geodesic distance for geographic data. In adition I calculate isolines for a nicer cartographic representation.
+
+
+```{r}
+dist2Hospital <- distanceFromPoints(limaRas, xy= healthsitesLima %>% filter(amenity == "hospital")) 
+# mask by admin boundary
+limaMask <- rasterize(adminLimaCallao, limaRas)
+dist2Hospital <- mask(dist2Hospital, limaMask)
+
+# create countour lines
+dist2HospitalContour5km <- rasterToContour(dist2Hospital, levels= seq(0, 30000, by=5000))  %>%   st_as_sf()
+dist2HospitalContour2_5km <- rasterToContour(dist2Hospital, levels= seq(2500, 30000, by=5000))  %>%   st_as_sf()
+```
+
+```{r}
+tmap_mode("view")
+tm_shape(dist2Hospital) + tm_raster(col="layer", alpha=.5, palette = "-plasma", title = "Distance hospital [m]") +
+  tm_shape(healthsitesLima %>% filter(amenity == "hospital")) + 
+  tm_dots() +
+  tm_shape(dist2HospitalContour5km) + tm_lines(lty=1, col="brown") +
+  tm_shape(dist2HospitalContour2_5km) + tm_lines(lty=4, col="brown") +
+  tm_shape(adminLima) + tm_borders()+
+  tm_basemap("OpenStreetMap.DE")
+```
+
+Of course distances at the islande are not to sensitive.
+We see that most parts of the administrative district of Lima and Callao are within 5km euclidian distance to any hospital. However, some settlements are farer away than 10km from the closest hospital. 
+
+## Distance to primary roads
+
+To calculate distance to primary roads, we have to first rasterize the roads and when use *distance* to calculate the distance to all non NA cells. The selection of primary roads use *filter* from *tidyvers* as above.
+
+```{r}
+# convert to raster
+primaryRoadsRas <- highwayLima %>% 
+  filter(highway== "primary") %>% 
+  rasterize(y=limaRas)
+# calc euclidian distance
+dist2Primary <- distance(primaryRoadsRas) 
+# mask areas outside Lima An Callao
+dist2Primary <- mask(dist2Primary, limaMask)
+# calculate isolines
+dist2PrimaryContour1km <- rasterToContour(dist2Primary, levels= seq(1000, 30000, by=2000))  %>%   st_as_sf()
+dist2PrimaryContour2km <- rasterToContour(dist2Primary, levels= seq(2000, 30000, by=2000))  %>%   st_as_sf()
+```
+
+Lets see what we got:
+
+```{r}
+tmap_mode("view")
+tm_shape(dist2Primary) + tm_raster(col="layer", alpha=.5, palette = "-plasma", title = "Distance primary road [m]", style="log10_pretty") +
+  tm_shape(healthsitesLima %>% filter(amenity == "hospital")) + 
+  tm_dots() +
+  tm_shape(dist2PrimaryContour1km) + tm_lines(lty=1, col="brown") +
+  tm_shape(dist2PrimaryContour2km) + tm_lines(lty=4, col="brown") +
+  tm_basemap("OpenStreetMap.DE")
+```
+
+If we want to get statistics on how far the hospitals are from primary roads we can simply extract the information from the distance raster.
+
+```{r}
+# create sp object for hospitals
+hospitalSp <- healthsitesLima %>% filter(amenity == "hospital") %>% as("Spatial")
+hospitalsDist2Primary <- raster::extract(dist2Primary, hospitalSp)
+```
+
+```{r}
+hist(x=hospitalsDist2Primary, main="Distance hospitals to primary roads in Lima", xlab= "Distance [m]", col="wheat", breaks=seq(0, 12000, by=500), las=1)
+```
+
+## Exercise
+
+Calculate the distance to secondary roads and when calculate the distance at which all amenity=doctors are from secondary roads.
+
+What is the distance of hospitals to either primary or secondary roads?
+

@@ -32,5 +32,4 @@ Dr. Sven Lautenbach (HeiGIT)
 * 15:00-15:15 Pause
 * 15:15-15:45 Lab R/Rstudio: ORS - Erreichbarkeiten von Gesundheitsstandorten über Isochronen (Sven Lautenbach)
 * 15:45-16:15 Übung
-* 16:30-17:00 Lab R/Rstudio: ORS Directions (Sven Lautenbach)
-* 17:00-17:15 Übung
+* 16:15-16:30 Abschlussbesprechung, Feedbackrunde

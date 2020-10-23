@@ -27,6 +27,8 @@ require(ggpubr) # for the arangement of multiple ggplot objects
 #require(raster)
 ```
 
+A helper function that eases the communication with the API a bit. It handles the processing of the data to ensure that a properly formated data.frame is returned.
+
 ```{r}
 getOsomeStat <- function(uri, valueFieldName="value", ...)
 {
@@ -63,7 +65,7 @@ getOsomeStat <- function(uri, valueFieldName="value", ...)
 
 ## Highway
 
-### Get time seires of contributions
+### Get time series of contributions
 
 To estimate how complete the OSM data are we could look at the historic development of OSM contributions.
 
@@ -365,12 +367,7 @@ resHighwayTs_long %>%
 geom_smooth( method="nls", formula= y~ SSlogis(input=x, Asym, xmid, scal) , se=FALSE, col="black", lty=2, size=1)
 ```
 
-```{r}
-g <- nls(length ~  a1 / (1+ exp(k1*( b1- as.numeric(timestamp)))) + (a2-a1) / (1+ exp(k2*( b2- as.numeric(timestamp)))), 
-         data = resHighwayTs_long, subset= type == "roadLength4cls",
-         start=c(a1=6000, a2= 25000, k1=10^-6, k2=10^-6, b1=as.numeric(as.POSIXct("2015-01-01")), b2= as.numeric(as.POSIXct("2018-07-01")))) 
-summary(g)
-```
+
 Fitting the double logistic regresson returns a non-significant coefficient for $k_1$, a negative saturation value for $a_1$ and values for $b_1$ and $b_2$ that indicate that the paramters for the second curve describe the first period. 
 If we change parameter $b_2$ a bit we get different model parameters or a model that not converges. This underlines how sensitive non-linear model could be with respect to small changes to starting values.
 

@@ -1,0 +1,193 @@
+---
+title: "Urban Data Science Lab - day 5 - accessibility analysis"
+author: "Sven Lautenbach"
+date: "10/22/2020"
+output: 
+  html_document: 
+    toc: yes
+    highlight: haddock
+    number_sections: yes
+    theme: sandstone
+    df_print: tibble
+---
+
+```{r setup, include=FALSE}
+require(knitr)
+ws <-"/home/slautenb/Documents/lehre/HD/ws_2020_21/heikaLab/R4UrbanDataLab_2020/" 
+require(knitr)
+opts_chunk$set(echo = TRUE)
+opts_knit$set(root.dir = ws)
+# handling of spatial data
+require(sf)
+require(tmap) # map creation
+#require(RCurl)
+#require(geojsonio)
+require(tidyverse)
+#require(ggpubr) # for the arangement of multiple ggplot objects
+#require(raster)
+require(openrouteservice)
+ors_api_key(Sys.getenv("ORSKEY")) # you need to specify your own API key here
+# ors_api_key(yourORSKey) # see https://openrouteservice.org/dev/#/signup
+```
+
+You need to sign up for the openrouteservice to perform the following exercises. This allows you to create an API key that allows the use of the ORS. See: https://openrouteservice.org/dev/#/signup
+
+The free API comes with some restrictions with respect to the number of operations you are allowed to execute per day and per minute (see https://openrouteservice.org/plans/). But this will not harm us here.
+
+# Helper functions
+
+A helper function that eases the communication with the API a bit. It handles the processing of the data to ensure that a properly formated data.frame is returned.
+
+```{r}
+getOsomeStat <- function(uri, valueFieldName="value", ...)
+{
+  results <- postForm(uri, binary=FALSE, .encoding = "utf-8", ...)
+  
+  #browser()
+  resultList <- RJSONIO::fromJSON(results, simplify = TRUE)
+  resultsDf <- data.frame(do.call("rbind", (resultList$result)))
+  # make sure the right data types are used
+  # for users we have  fromTimestamp  and  toTimestamp fields, not timestampe
+  if(length(grep(x=names(resultsDf), pattern = "timestamp"))> 0)
+  {
+    resultsDf$timestamp <- parse_datetime( as.character(resultsDf$timestamp))  
+  }
+  if(length(grep(x=names(resultsDf), pattern = "fromTimestamp"))> 0)
+  {
+    resultsDf$fromTimestamp <- parse_datetime( as.character(resultsDf$fromTimestamp))  
+  }
+  if(length(grep(x=names(resultsDf), pattern = "toTimestamp"))> 0)
+  {
+    resultsDf$toTimestamp <- parse_datetime( as.character(resultsDf$toTimestamp))  
+  }
+  # rename value field
+  resultsDf$value <- as.numeric(as.character(resultsDf$value))
+  idxValueField <- which(names(resultsDf)=="value")
+  names(resultsDf)[idxValueField] <- valueFieldName
+  
+  
+  return(resultsDf)
+}
+```
+
+```{r}
+adminLimaCallao <- st_read(dsn="data_day5/lima.gpkg", layer="limaCallao")
+limaBbox <- st_bbox(adminLimaCallao)
+limaBboxStr <- paste(limaBbox, collapse = ", ")
+```
+
+```{r, cache=TRUE}
+response <- RCurl::postForm("https://api.ohsome.org/v1/elements/centroid", bboxes = limaBboxStr, filter = "amenity=hospital", time = "2020-05-01",  binary=FALSE, properties="tags")
+
+content <- geojsonio::as.json(response)
+hospitalsLima <- geojsonio::geojson_sf(content)
+```
+
+```{r}
+nrow(hospitalsLima)
+```
+
+```{r}
+st_crs(hospitalsLima) # needs to be WGS84 - which it is (no surprise)
+```
+
+
+# Calculate isochrones
+
+
+```{r}
+theCoords <- data.frame(st_coordinates(hospitalsLima))
+names(theCoords) <-c("lon", "lat")
+head(theCoords)
+```
+
+We need a loop since 5 is the maximum number of locations ors_isochrones accept. Would need to stop at 500 since this is the imit per day. We also need to pause every 20 requests snce this is the limit per minute.
+
+*I run the code and saved the data to avoid performing the same operation over and over again. If you look into the RMakrdown code you will see that I used the **eval=FALSE** and **include=FALSE** chunk options to hide this a bit from the resulting HTML document.*
+
+
+```{r, eval=FALSE, message=FALSE}
+isocCar <- NULL
+nHospitals <- nrow(hospitalsLima)
+# nrow(theCoords)
+for(i in 1:nHospitals)
+{
+  if(i%%20==0)
+  {
+    cat(paste(round(i/nrow(theCoords)*100), "% processed.\n"))
+    Sys.sleep(70)
+  }
+  
+  testRes <- try(
+    {
+      res <- ors_isochrones(locations= theCoords[i,], range = c(300, 600, 1200, 2400, 3600), output = "sf", profile="driving-car", range_type="time",  attributes=c("area", "reachfactor", "total_pop"))  
+    })
+  if(inherits(testRes, "try-error"))
+    next
+  res$osm_id <- hospitalsLima$X.osmId[i]
+  if(is.null(isocCar))
+  { 
+    isocCar <- res
+  } else {
+    isocCar <- rbind(isocCar, res)
+  }
+  
+  
+}
+
+dim(isocCar)
+head(st_drop_geometry(isocCar))
+```
+
+
+
+
+## Export
+```{r, eval=FALSE}
+save(isocCar, file= "data_day5/isocCar_hospitalsLima.Rdata")
+```
+
+```{r, eval=FALSE}
+st_write(isocCar, dsn="data_day5/isochronesLima.gpkg", layer="iisocCar_hospitalsLima", delete_layer=TRUE)
+```
+
+```{r, include=FALSE, eval= TRUE}
+load("data_day5/isocCar_hospitalsLima.Rdata")
+```
+
+# Analysis of the isochrones
+
+Since the isocrones overlap each other it is useful to separate them and plot them in the right order. Another alternative would be to clip them.
+
+```{r}
+isocCar300 <- isocCar %>% filter(value == 300)
+isocCar600 <- isocCar %>% filter(value == 600)
+isocCar1200 <- isocCar %>% filter(value == 1200)
+isocCar2400 <- isocCar %>% filter(value == 2400)
+isocCar3600 <- isocCar %>% filter(value == 3600)
+```
+
+
+```{r}
+theColors <- RColorBrewer::brewer.pal(5, "YlOrBr")
+tmap_mode("view")
+tm_shape(isocCar3600) + tm_fill(col=theColors[5]) + 
+  tm_shape(isocCar2400) + tm_fill(col=theColors[4]) + 
+  tm_shape(isocCar1200) + tm_fill(col=theColors[3]) + 
+  tm_shape(isocCar600) + tm_fill(col=theColors[2]) + 
+  tm_shape(isocCar300) + tm_fill(col=theColors[1]) + 
+  tm_shape(hospitalsLima) + tm_dots()+
+  tm_scale_bar() 
+```
+
+## Population data
+
+The ORS retunred already the population data per isochrone area based on WorldPop data. However, we need to be clear about that the population cannot be added across isochrones related to different hospital since this would involve heavy double counting: overlapping isochrones share the population in the overlapping areas. What we could do however is to look at the population of the isochrones of each hospital.
+
+```{r}
+isocCar %>% ggplot(mapping=aes(x=osm_id, y=total_pop)) + 
+  geom_point(size=.5) + facet_grid(~value) + 
+  xlab("Hospital") + ylab("Population") +
+  labs(title= "Population in isochrones of hospitals in Lima", subtitle = "Isochrones are in minutes driving distance by car")
+```
+

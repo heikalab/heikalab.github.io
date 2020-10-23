@@ -156,7 +156,7 @@ We see that most parts of the administrative district of Lima and Callao are wit
 
 To calculate distance to primary roads, we have to first rasterize the roads and when use *distance* to calculate the distance to all non NA cells. The selection of primary roads use *filter* from *tidyvers* as above.
 
-```{r}
+```{r, cache=TRUE}
 # convert to raster
 primaryRoadsRas <- highwayLima %>% 
   filter(highway== "primary") %>% 
@@ -194,9 +194,85 @@ hospitalsDist2Primary <- raster::extract(dist2Primary, hospitalSp)
 hist(x=hospitalsDist2Primary, main="Distance hospitals to primary roads in Lima", xlab= "Distance [m]", col="wheat", breaks=seq(0, 12000, by=500), las=1)
 ```
 
+## Population in distance of
+
+```{r}
+popRas <- raster("data_day5/per_ppp_2020_UNadj_constrained.tif")
+print(popRas)
+```
+
+Crop to case study region
+
+```{r}
+popRas <- crop(popRas, adminLimaCallao)
+names(popRas) <- "per_ppp_2020_UNadj_constrained"
+```
+
+
+```{r, eval=FALSE}
+tmap_mode("view")
+tm_shape(popRas) + tm_raster(col="per_ppp_2020_UNadj_constrained", style = "log10_pretty", alpha=.7) + tm_scale_bar() + tm_layout(title="Population density - WorldPop constrained" ) + tm_basemap("OpenStreetMap.DE")
+```
+
+```{r}
+crs(popRas)
+```
+
+New template raster with same resolution as popRas and new mask and distance calculation to hospitals.
+
+
+```{r}
+dist2Hospital <- distanceFromPoints(popRas, xy= healthsitesLima %>% filter(amenity == "hospital")) 
+# mask by admin boundary
+limaMask <- rasterize(adminLimaCallao, popRas)
+dist2Hospital <- mask(dist2Hospital, limaMask)
+
+# create countour lines
+dist2HospitalContour5km <- rasterToContour(dist2Hospital, levels= seq(0, 30000, by=5000))  %>%   st_as_sf()
+dist2HospitalContour2_5km <- rasterToContour(dist2Hospital, levels= seq(2500, 30000, by=5000))  %>%   st_as_sf()
+```
+
+Zonal statistics
+
+Discretize the distance raster by cut
+
+
+```{r}
+dist2HospitalZones <- cut(dist2Hospital, breaks=c(0, 500, 1000, 2500, 5000, 10000, 26000))
+```
+
+```{r}
+tm_shape(dist2HospitalZones) + tm_raster(col="layer")
+```
+
+
+```{r}
+popByDist2Hospital <- zonal(popRas, dist2HospitalZones, fun= 'sum')
+popByDist2Hospital <- as.data.frame(popByDist2Hospital)
+popByDist2Hospital$zoneName <- c("0-0.5", "0.5-1", "1-2.5", "2.5-5", "5-10", ">10")
+# ensue factor levels are in right order
+popByDist2Hospital$zoneName <- factor(popByDist2Hospital$zoneName, levels= c("0-0.5", "0.5-1", "1-2.5", "2.5-5", "5-10", ">10"))
+```
+
+```{r}
+ggplot(popByDist2Hospital, mapping=aes(x=zoneName, y=sum)) + geom_col()+ xlab("Distance to nearest hospital [km]") + ylab("Population") + labs("Population in distance to hospital", subtitle = "Lima, OSM and WorldPop constrained")
+```
+
+We could also display the distribution of values in each of the zones by using functionality from the *rasterVis* package that comes loaded with functions for visualisation of raster data.
+
+```{r}
+require(rasterVis)
+rasStack <- raster::stack(dist2HospitalZones, popRas)
+names(rasStack) <- c("dist2HospitalZone", "pop")
+bwplot(pop ~ dist2HospitalZone, data=rasStack, scales=list(y=list(log=10)))
+```
+
+
 ## Exercise
 
 Calculate the distance to secondary roads and when calculate the distance at which all amenity=doctors are from secondary roads.
 
 What is the distance of hospitals to either primary or secondary roads?
+
+How are people distributed in distance to amenity=doctors?
 

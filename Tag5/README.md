@@ -5,8 +5,8 @@
 
 ## Daten
 
-* <a href="/data_day5/lima.gpkg">Administrative Grenzen Lima und Callao</a>
-* <a href="/data_day5/per_ppp_2020_UNadj_constrained.tif">WorldPop Datensatz für Peru, constrained downscalling</a>
+* <a href="data_day5/lima.gpkg">Administrative Grenzen Lima und Callao</a>
+* <a href="data_day5/per_ppp_2020_UNadj_constrained.tif">WorldPop Datensatz für Peru, constrained downscalling</a>
 
 ## Scripte
 

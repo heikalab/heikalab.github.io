@@ -142,7 +142,7 @@ We also observe that inbetween the road length for tertiary highways dropped dra
 
 ```{r}
 resHighwayTs_long %>% 
-  filter(type != "total_highway_length") %>%
+  filter(type != "total_highway_length" & type != "roadLength4cls") %>%
   ggplot( mapping=aes(x=timestamp, y=length, fill=type)) +
   geom_area(position="stack", show.legend = TRUE, alpha=.7) + 
   scale_fill_discrete(name = "Highway class",
@@ -162,11 +162,11 @@ We could try to fit a saturation curve (logistic curve in this example) to the d
 
 We use a parametrization of the logistic function for which a selt-starter functions exists:
 
-$y = \frac{Asym} {(1+exp^{\frac{x_{mid} - x}{scal})}}$
+$y = \frac{Asym} {1+e^{\frac{x_{mid} - x}{scal}}}$
 
-  * Asym is the asymptotic value the function converges against
-  * $x_{mid} is the x-value (here time, in seconds since 01.01.1970) at which the curve has its turing point (half saturation point)
-  * scal is inversely related to the slope of the curve
+  * $Asym$ is the asymptotic value the function converges against
+  * $x_{mid}$ is the x-value (here time, in seconds since 01.01.1970) at which the curve has its turing point (half saturation point)
+  * $scal is inversely related to the slope of the curve
   
 For the fitting of non-linear functions we need to provide suitable start values for all parameters to be estimated. Otherwise the function might not converge. For some commonly used function R provides self-starter functions, that estimate suitable start values from the data.
 
@@ -192,13 +192,13 @@ The single saturation curve does not fit to well. A double logistic curve presum
 The double logistic curve is the sum of two logist curves therebey the second curve is zero until a threshold. It can be expressed as follows:
 
 
-$y= \frac{a_1} {(1+ exp^{(k_1*( b_1- x)))}} + \frac{(a_2-a_1)} {(1+ exp^{(k_2*( b_2- x)))}} $
+$$ y= \frac{a_1} {1+ e^{k_1*( b_1- x)}} + \frac{a_2-a_1} {1+ e^{k_2*( b_2- x)}} $$
 
   - $a_1$ represents the saturation value for the first (the y value at which the first logistic curve saturates)
   - $a_1$ + $a_2$ is the saturation value at which the combined curve saturates. $a_2$ is the saturation of the second curve if the values of the second curve would be substracted
   - $b_1$ represents the date (in internal representation which is seconds since 01.01.1970) at which the first curve has reached its turning point
   - $b_2$ represents the date at which the second curve has reached its turning point
-  - $k_1$ and $k_2$ describe the slope of the first and the second curve. 
+  - $k_1$ and $k_2$ describe the slope of the first and the second curve. The represent $\fra{1}{scal}.
 
 For the double logistic curve we have no self-starter function. Which implies that we have to supply start values for the function.
 
@@ -288,14 +288,14 @@ summary(g)
 ```{r}
 idx_a1 <- which(names(coef(g))=="a1")
 idx_a2 <- which(names(coef(g))=="a2")
-saturationCoef <- coef(g)[idx_a1] + coef(g)[idx_a2]
+saturationCoef <- as.numeric(coef(g)[idx_a1] + coef(g)[idx_a2])
 
 maxVal <- resHighwayTs_long %>% 
   filter(type == "total_highway_length") %>% select(length) %>% max()
 ```
 
 
-The fitted saturation curve estimates the maximum at $a_1 + a_2$ = `r saturationCoef` that is `r signif(maxVal /saturationCoef,4)  * 100`% of the current value: 
+The fitted saturation curve estimates the maximum at $ a_1 + a_2 $ = `r saturationCoef` that is `r signif(maxVal /saturationCoef,4)  * 100`% of the current value: 
   
 
 Which dates have been selected?  

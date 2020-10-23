@@ -24,9 +24,11 @@ map
 
 #####Exercise 2: Reading shp-files with sf and displaying with tmap#####
 
-ka_sf <- st_read(dsn = ".", layer = "ka_fr_00_link")
+ka00 <- st_read(dsn = ".", layer = "ka_fr_00_link")
+ka01 <- st_read(dsn = ".", layer = "ka_fr_01_link")
 
-ka_sf <- st_transform(ka_sf, 4326)
+ka01 <- st_transform(ka_01, 4326)
+
 tm_shape(ka_sf)+tm_lines(col="MEDIANSP.3", style = "equal", lwd="MEDIANSP.3", scale=5, legend.lwd.show = FALSE)
 
 ###Change between plot and view mode
@@ -41,7 +43,7 @@ int_map <- leaflet() %>%
   addPolylines(data=ka_sf, color = ~binpal(MEDIANSP.3))
 
 int_map
-#options = providerTileOptions(opacity = 0.35)
+options = providerTileOptions(opacity = 0.35)
 #####Batch Load Shps#####
 
 shps <- list.files(,pattern = "*.SHP")

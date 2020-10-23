@@ -12,7 +12,7 @@ nav_order: 7
 <img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/bruns.jpg" alt="Julian Bruns" style="align:left; width:80px;height:120px;">
 Dr. Julian Bruns (Disy Informationssysteme GmbH)
 </p>
-
+<p>Akira Sriamulu (Disy Informationssysteme GmbH)</p>
 <p>
 <img src="https://raw.githubusercontent.com/heikalab/urbandatascience/main/images/lautenbach.jpg" alt="Sven Lautenbach" style="align:left; width:120px;height:120px;">
 Dr. Sven Lautenbach (HeiGIT)
